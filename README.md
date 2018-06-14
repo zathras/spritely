@@ -1,0 +1,2 @@
+# spritely
+Sprite Animation Library
