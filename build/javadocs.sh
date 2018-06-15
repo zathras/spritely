@@ -1,3 +1,5 @@
 #!/bin/sh
-echo "This should be run from the project base directory."
+cd `dirname $0`/..
+echo "Running in `pwd`"
+rm -rf docs/javadocs
 javadoc -d docs/javadocs -sourcepath src edu.calpoly.spritely

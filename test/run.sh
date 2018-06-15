@@ -22,8 +22,8 @@ HEADLESS=""
 
 
 # To test headless, put $H in java line, and put stdin in single
-# character mode::
-# stty -echo cbreak; HEADLESS=-Djava.awt.headless=true
+# character mode:
+#stty -echo cbreak; HEADLESS=-Djava.awt.headless=true
 
 java $HEADLESS -cp out -ea Main
 reset_tty

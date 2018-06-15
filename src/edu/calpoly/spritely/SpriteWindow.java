@@ -1,6 +1,24 @@
-//
-// TODO:  When window closes, stop the SpriteWindow
-//
+/*
+ * Copyright © 2018, Bill Foote, Cal Poly, San Luis Obispo, CA
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining 
+ * a copy of this software and associated documentation files (the “Software”), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included 
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 package edu.calpoly.spritely;
 
@@ -21,7 +39,7 @@ import java.util.LinkedList;
  * The basic lifecycle of a SpriteWindow application is as follows:
  * <pre>
  *    SpriteWindow window = new SpriteWindow();
- *    window.setXXX() (initial width, height, callbacks, etc.)
+ *    window.setXXX() (frames/second, callbacks, etc.)
  *    window.start();
  *    while (!window.getStopped()) {
  *        update any needed data structures
@@ -46,6 +64,8 @@ import java.util.LinkedList;
  * want multiple frames, you can run each frame from its own thread, or you
  * can arrange to call showNextFrame on the multiple frame objects, one
  * after the other, from the same thread.
+ *
+ *      @author         Bill Foote, http://jovial.com
  */
 public class SpriteWindow {
 
@@ -59,7 +79,7 @@ public class SpriteWindow {
      */
     public final static Size DEFAULT_TILE_SIZE = new Size(32, 32);
 
-    String name;
+    final String name;
     Size gridSize;
     Size tileSize = DEFAULT_TILE_SIZE;
 
@@ -77,6 +97,16 @@ public class SpriteWindow {
     /**
      * Initialize a SpriteWindow to represent a grid gridSize.width columns wide
      * and gridSize.height rows high.
+     *
+     * @param   name    The name of this window.  This might be shown
+     *                  in the title area of the screen.
+     * @param   gridSize  The number of rows and columns of the grid that
+     *                    is to be animated.
+     *
+     * @see #setFps(double)
+     * @see #setTileSize(Size)
+     * @see #setKeyTypedHandler(KeyTypedHandler)
+     * @see #setMouseClickedHandler(MouseClickedHandler)
      */
     public SpriteWindow(String name, Size gridSize) {
         this.gridSize = gridSize;
@@ -108,6 +138,7 @@ public class SpriteWindow {
     /**
      * Sets the number of frames/second that are displayed.
      *
+     * @param   fps     The desired number of frames per second
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
      */
@@ -120,6 +151,7 @@ public class SpriteWindow {
     /**
      * Sets the tile size to the desired value.
      *
+     * @param  tileSize The desired tile size
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_TILE_SIZE
      */
@@ -130,6 +162,8 @@ public class SpriteWindow {
 
     /**
      * Get the size of the tiles this window is showing.
+     *
+     * @return  The tile size, in pixels
      */
     public Size getTileSize() {
         return tileSize;
@@ -139,11 +173,16 @@ public class SpriteWindow {
      * Sets a key typed handler.  If a key is typed, the key typed event
      * will be be sent to the handler during a call to waitForNextFrame()
      *
-     * @throws IllegalStateException if start() has been called.
+     * @param  handler  The handler.  
+     * @throws IllegalStateException if start() has been called, or if
+     *                               a handler was previously set.
      * @see #waitForNextFrame()
      */
     public void setKeyTypedHandler(KeyTypedHandler handler) {
         checkStarted(false);
+        if (this.keyHandler != null) {
+            throw new IllegalStateException();
+        }
         this.keyHandler = handler;
     }
 
@@ -151,11 +190,15 @@ public class SpriteWindow {
      * Sets a mouse handler.  If the mouse is clicked, the mouse event will
      * be sent to the handler during a call to waitForNextFrame()
      *
+     * @param handler   The handler.
      * @throws IllegalStateException if start() has been called.
      * @see #waitForNextFrame()
      */
     public void setMouseClickedHandler(MouseClickedHandler handler) {
         checkStarted(false);
+        if (this.mouseHandler != null) {
+            throw new IllegalStateException();
+        }
         this.mouseHandler = handler;
     }
 
@@ -178,19 +221,21 @@ public class SpriteWindow {
 
 
     /**
-     * Returns true if this animation window is stopped.  An animation
+     * Returns true if this animation window is running .  An animation
      * window can be stopped by calling stop().  Additionally, it
      * is stopped if the current thread is interrupted during a call to
      * waitForNextFrame().
      *
+     * @return true iff we're running
      * @see Thread#interrupt()
+     * @see #stop()
      */
-    public boolean getStopped() {
+    public boolean isRunning() {
         if (!started) {
             return false;
         }
         synchronized(display) {
-            return !running;
+            return running;
         }
     }
 
@@ -198,6 +243,8 @@ public class SpriteWindow {
      * Start this SpriteWindow.  If our environment is graphics-capable,
      * this will create a window where the graphics are displayed.  This
      * may only be called once per SpriteWindow.
+     *
+     * @throws IllegalStateException  if we were already started
      */
     public void start() {
         checkStarted(false);
@@ -221,6 +268,8 @@ public class SpriteWindow {
     /**
      * Stop this SpriteWindow's animation, and close the window, if it's
      * visible.
+     *
+     * @throws IllegalStateException    if we were never started
      */
     public void stop() {
         checkStarted(true);
@@ -234,10 +283,18 @@ public class SpriteWindow {
     }
 
     /**
-     * The time since the start of the animation of the current animation
+     * Give the time since the start of the animation of the current animation
      * frame, in milliseconds.  This value can drift off of wall clock time,
      * if the animation is too slow.  This can also happen if the program
-     * is suspended for a time.
+     * is suspended for a time, e.g. for debugging.  It is therefore 
+     * recommended that all time-based events in an animation be based off 
+     * the time value returned by this  method, rather than e.g.
+     * System.currentTimeMillis().
+     *
+     * @return  The total elapsed time, adjusted for pauses, in milliseconds.
+     *
+     * @see #pauseAnimation(int)
+     * @see System#currentTimeMillis()
      */
     public double getTimeSinceStart() {
         return currFrame * (1000 / fps);
@@ -247,6 +304,10 @@ public class SpriteWindow {
      * Wait for the next frame of animation.  Returns null if this window
      * is stopped.  If the current thread is interrupted, the window will
      * be stopped.
+     *
+     * @return  The frame where client code can add tiles to be drawn
+     *
+     * @see AnimationFrame#addTile(int, int, Tile)
      */
     public AnimationFrame waitForNextFrame() {
         synchronized(display) {

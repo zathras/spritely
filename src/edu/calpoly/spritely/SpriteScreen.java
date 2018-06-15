@@ -1,3 +1,24 @@
+/*
+ * Copyright © 2018, Bill Foote, Cal Poly, San Luis Obispo, CA
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining 
+ * a copy of this software and associated documentation files (the “Software”), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included 
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 package edu.calpoly.spritely;
 
@@ -5,6 +26,8 @@ import java.io.IOException;
 
 /**
  * An object to display sprite animation on the terminal screen.
+ *
+ *      @author         Bill Foote, http://jovial.com
  */
 final class SpriteScreen implements SpriteDisplay {
 
@@ -17,6 +40,9 @@ final class SpriteScreen implements SpriteDisplay {
     }
 
     public void start() {
+        System.out.println();
+        // Set the title:  http://tldp.org/HOWTO/Xterm-Title-3.html
+        System.out.println("" + ((char) 27) + "]0;" + window.name + ((char) 7));
         clearScreen();
     }
 
