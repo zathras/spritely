@@ -61,6 +61,18 @@
  * </ul>
  * The main entry point for this package is the class 
  * <a href="SpriteWindow.html"><code>SpriteWindow</code></a>.
+ * Here's an illustration of the main classes:
+ * <p>
+ * <img src="doc-files/uml.svg" width="100%" alt="*">
+ * <p>
+ * An application starts by creating an instance of SpriteWindow.
+ * Each time it's ready to show a frame of animation, it calls
+ * <code>waitForNextFrame()</code> to wait until it's time to show
+ * the frame.  This method returns an <code>AnimationFrame</code>,
+ * which the program fills with tiles.  When it's done, it calls
+ * <code>showNextFrame()</code> on the <code>SpriteWindow</code> to
+ * display it.
+ * <p>
  * See also 
  * <a href="https://spritely.jovial.com/">https://spritely.jovial.com/</a>,
  * and <a href="doc-files/LICENSE.txt">the license</a>.

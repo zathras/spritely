@@ -88,7 +88,7 @@ public class ImageTile implements Tile {
     }
 
     @Override
-    public char getPrinted() {
+    public char getText() {
         return text;
     }
 }

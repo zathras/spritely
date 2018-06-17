@@ -171,7 +171,7 @@ public final class AnimationFrame {
                 } else {
                     System.out.print(' ');
                     Tile t = cell.get(cell.size() - 1);
-                    System.out.print(t.getPrinted());
+                    System.out.print(t.getText());
                 }
             }
             System.out.println("        ");

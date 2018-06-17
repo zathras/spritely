@@ -58,7 +58,7 @@ public class SolidColorTile implements Tile {
     }
 
     @Override
-    public char getPrinted() {
+    public char getText() {
         return text;
     }
 }
