@@ -271,6 +271,8 @@ public class SpriteWindow {
      * The window's tile size must not be changed after this is
      * called.
      *
+     * @return  The frame where client code can add tiles to be drawn
+     *
      * @throws IllegalStateException  if we've started, or this has been
      *				      called before.
      */
@@ -425,7 +427,7 @@ public class SpriteWindow {
      * Show the next frame of animation.  The AnimationFrame last returned
      * by waitForNextFrame is displayed to the screen.
      *
-     * @throw IllegalStateException if waitForNextFrame() has not been called,
+     * @throws IllegalStateException if waitForNextFrame() has not been called,
      *				    or if started has not been called.
      * @see #waitForNextFrame()
      */
