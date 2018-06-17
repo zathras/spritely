@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # Compile the program:
@@ -21,8 +21,8 @@ trap reset_tty INT
 HEADLESS=""
 
 
-# To test headless, put $H in java line, and put stdin in single
-# character mode:
+# To test headless, set the java system property, and
+# put the terminal in character mode:
 #stty -echo cbreak; HEADLESS=-Djava.awt.headless=true
 
 java $HEADLESS -cp out -ea Main
