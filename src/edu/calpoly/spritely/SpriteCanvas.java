@@ -58,6 +58,10 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
         frame = new JFrame(window.name);
     }
 
+    double getScale() {
+	return scale;
+    }
+
     @Override
     public void start() {
         frame.addKeyListener(new KeyAdapter() {
@@ -88,18 +92,24 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
             public void windowClosing(WindowEvent e) {
                 window.stop();
             }
+	    @Override
+	    public void windowOpened(WindowEvent e) {
+		window.setOpened();
+	    }
         });
         frame.pack();
         frame.setVisible(true);
-        System.out.println();
-        System.out.println("Spritely:  Type alt-plus, alt-minus, and " +
-                           "alt-zero to zoom");
-        System.out.println();
+	if (!window.getSilent()) {
+	    System.out.println();
+	    System.out.println("Spritely:  Type alt-plus, alt-minus, and " +
+			       "alt-zero to zoom");
+	    System.out.println();
+	}
 
     }
 
     private void handleKeyPressed(KeyEvent e) {
-        if ((e.getModifiers() & ActionEvent.ALT_MASK) != 0) {
+        if ((e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) != 0) {
             int c = e.getKeyCode();
 
             if (c == KeyEvent.VK_EQUALS) {
@@ -117,7 +127,7 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 
     private synchronized void handleKeyTyped(KeyEvent e) {
         if (e.getWhen() != keyDownEventWhen
-            || (e.getModifiers() & ActionEvent.ALT_MASK) == 0)
+            || (e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == 0)
         {
             // We don't want to send the alt-plus, alt-minus or alt-0
             // to our client.
@@ -144,6 +154,7 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
                                 * window.tileSize.height);
         setPreferredSize(new Dimension(w, h));
         revalidate();
+	repaint();
     }
 
     @Override
@@ -172,8 +183,7 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     @Override
     public synchronized void showFrame(AnimationFrame f) {
         animationFrame = f;
-        Dimension d = getSize();
-        repaint();
+        f.setRepaintArea(this);
     }
 
     @Override

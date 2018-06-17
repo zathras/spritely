@@ -44,6 +44,7 @@ final class SpriteScreen implements SpriteDisplay {
         // Set the title:  http://tldp.org/HOWTO/Xterm-Title-3.html
         System.out.println("" + ((char) 27) + "]0;" + window.name + ((char) 7));
         clearScreen();
+	window.setOpened();
     }
 
     public void closeFrame() {
@@ -92,6 +93,8 @@ final class SpriteScreen implements SpriteDisplay {
     @Override
     public synchronized boolean pollForInput(boolean mouseWanted) {
         if (!mouseNoticeGiven && frameShown && mouseWanted) {
+	    // We don't respect window.getSilent() here, since text mode
+	    // really is just intended for debugging.
             System.out.println();
             System.out.println("Spritely:  Note that you can simulate a " +
                                "mouse click ty typing \"m\".");

@@ -47,6 +47,7 @@ public class Main {
         window.setFps(10);
         window.setKeyTypedHandler(ch -> keyTyped(ch));
         window.setMouseClickedHandler((x, y) -> mouseClicked(x, y));
+
         window.start();
         backgroundTile = new SolidColorTile(Color.blue.darker(), '.');
         File imageFile = new File(

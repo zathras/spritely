@@ -72,7 +72,7 @@ public class SpriteWindow {
     /**
      * The default number of frames per second.
      */
-    public final static double DEFAULT_FPS = 60.0;
+    public final static double DEFAULT_FPS = 30.0;
 
     /**
      * The default tile size:  32x32
@@ -85,6 +85,7 @@ public class SpriteWindow {
 
     private boolean started = false;
     private boolean running = false;
+    private boolean opened = false;
     private SpriteDisplay display;
     private double fps = DEFAULT_FPS;
     private AnimationFrame currentAnimationFrame = null;
@@ -93,6 +94,7 @@ public class SpriteWindow {
     private LinkedList<Runnable> eventQueue = new LinkedList<>();
     private KeyTypedHandler keyHandler = null;
     private MouseClickedHandler mouseHandler = null;
+    private boolean silent = false;
 
     /**
      * Initialize a SpriteWindow to represent a grid gridSize.width columns wide
@@ -170,6 +172,22 @@ public class SpriteWindow {
     }
 
     /**
+     * Sets a flag to silence warnings that are sent to the
+     * terminal, such as when animation falls behind.  This
+     * flag defaults to false.  The flag can be changed at
+     * any time.
+     *
+     * @param silent	true if you don't want to get warnings.
+     */
+    public void setSilent(boolean silent) {
+	this.silent = silent;
+    }
+
+    boolean getSilent() {
+	return silent;
+    }
+
+    /**
      * Sets a key typed handler.  If a key is typed, the key typed event
      * will be be sent to the handler during a call to waitForNextFrame()
      *
@@ -218,6 +236,13 @@ public class SpriteWindow {
             eventQueue.add(() -> mouseHandler.mouseClicked(x, y));
         }
     }
+    
+    void setOpened() {
+	synchronized(display) {
+	    opened = true;
+	    display.notifyAll();
+	}
+    }
 
 
     /**
@@ -240,6 +265,28 @@ public class SpriteWindow {
     }
 
     /**
+     * Get an AnimationFrame to set up the initial screen, before
+     * start() is called.  This is entirely optional, but it might 
+     * help to avoid a flashing effect when a window is created.
+     * The window's tile size must not be changed after this is
+     * called.
+     *
+     * @return  The frame where client code can add tiles to be drawn
+     *
+     * @throws IllegalStateException  if we've started, or this has been
+     *				      called before.
+     */
+    public AnimationFrame getInitialFrame() {
+        checkStarted(false);
+	if (currentAnimationFrame != null) {
+	    throw new IllegalStateException("getInitialFrame() already called");
+	}
+	currentAnimationFrame = new AnimationFrame(gridSize, tileSize, null);
+	return currentAnimationFrame;
+    }
+     
+
+    /**
      * Start this SpriteWindow.  If our environment is graphics-capable,
      * this will create a window where the graphics are displayed.  This
      * may only be called once per SpriteWindow.
@@ -260,6 +307,9 @@ public class SpriteWindow {
         }
         started = true;
         running = true;
+	if (currentAnimationFrame != null) {
+	    display.showFrame(currentAnimationFrame);
+	}
         display.start();
         startTime = System.currentTimeMillis();
         currFrame = -1L;
@@ -323,6 +373,16 @@ public class SpriteWindow {
                     event = eventQueue.removeFirst();
                 } else if (display.pollForInput(mouseHandler != null)) {
                     excused = true;
+		} else if (!opened) {
+		    assert currFrame == 0;
+		    try {
+			display.wait();
+		    } catch (InterruptedException ex) {
+			stop();
+			Thread.currentThread().interrupt();
+			return null;
+		    }
+		    startTime = System.currentTimeMillis();
                 } else {
                     double frameMS = 1000 / fps;
                     double timeSinceStart = getTimeSinceStart();
@@ -332,11 +392,12 @@ public class SpriteWindow {
                     if (waitTime < -frameMS) {
                         if (excused) {
                             excused = false;
-                        } else {
+                        } else if (!silent) {
                             System.out.println(
-                                "NOTE:  Animation fell behind by more than "+
-                                "a full frame on frame " + currFrame + ".");
-                            System.out.println("       Animation clock reset.");
+                                "NOTE:  Animation fell behind by " +
+				(long) Math.ceil(-frameMS - waitTime) + 
+				" ms on frame " + currFrame +
+				".  Animation clock reset.");
                         }
                         startTime = now - (long) timeSinceStart;
                         break;
@@ -366,9 +427,15 @@ public class SpriteWindow {
      * Show the next frame of animation.  The AnimationFrame last returned
      * by waitForNextFrame is displayed to the screen.
      *
+     * @throws IllegalStateException if waitForNextFrame() has not been called,
+     *				    or if started has not been called.
      * @see #waitForNextFrame()
      */
     public void showNextFrame() {
+        checkStarted(true);
+	if (currentAnimationFrame == null) {
+	    throw new IllegalStateException();
+	}
         display.showFrame(currentAnimationFrame);
     }
 

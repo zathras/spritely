@@ -1,5 +1,0 @@
-
-
-Make mouse event give grid coordinate
-
-Add mouse, keyboard events to text version

@@ -52,10 +52,10 @@ public interface Tile {
     public void paint(Graphics2D g, Size size);
 
     /**
-     * Gives the character representation of this tile.
+     * Gives the text representation of this tile.
      *
      * @return the character representation of this tile in text mode.
      */
-    public char getPrinted();
+    public char getText();
 
 }

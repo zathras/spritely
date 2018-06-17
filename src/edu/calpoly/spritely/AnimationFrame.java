@@ -23,6 +23,7 @@ package edu.calpoly.spritely;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -42,6 +43,7 @@ public final class AnimationFrame {
     private final Object grid[][];     // Really array of List<Tile>.  Sigh.
     private final Size tileSize;
     private boolean shown = false;
+    AnimationFrame lastFrame;
 
     AnimationFrame(Size gridSize, Size tileSize, AnimationFrame lastFrame) {
         grid = new Object[gridSize.height][gridSize.width];
@@ -51,6 +53,10 @@ public final class AnimationFrame {
             }
         }
         this.tileSize = tileSize;
+	this.lastFrame = lastFrame;
+	if (lastFrame != null) {
+	    lastFrame.lastFrame = null;
+	}
     }
 
     /**
@@ -66,6 +72,7 @@ public final class AnimationFrame {
      *
      * @throws IllegalArgumentException if x, y are out of range.
      * @throws IllegalStateException    if this frame has been shown
+     * @throws NullPointerException	if tile is null
      * @see SpriteWindow#waitForNextFrame()
      * @see SpriteWindow#showNextFrame()
      */
@@ -76,13 +83,67 @@ public final class AnimationFrame {
         if (x < 0 || y < 0 && y >= grid.length || x >= grid[0].length) {
             throw new IllegalArgumentException();
         }
+	if (tile == null) {
+	    throw new NullPointerException();
+	}
         @SuppressWarnings("unchecked")
-        List<Tile> cell = (List<Tile>) grid[y][x];
+        List<Tile> cell = (List<Tile>) grid[y][x];	// sigh
         cell.add(tile);
     }
 
-    void paint(Graphics2D g) {
+    void setRepaintArea(SpriteCanvas canvas) {
+	assert !shown;
         shown = true;
+	if (lastFrame == null) {
+	    canvas.repaint();
+	    return;
+	}
+	int minX = Integer.MAX_VALUE;
+	int maxX = Integer.MIN_VALUE;
+	int minY = Integer.MAX_VALUE;
+	int maxY = Integer.MIN_VALUE;
+        for (int y = 0; y < grid.length; y++) {
+            for (int x = 0; x < grid[y].length; x++) {
+                @SuppressWarnings("unchecked")
+                List<Tile> cell = (List<Tile>) grid[y][x];
+                @SuppressWarnings("unchecked")
+                List<Tile> old = (List<Tile>) lastFrame.grid[y][x];
+		if (!(cell.equals(old))) {	// cf. Tile class documentation
+		    minX = Math.min(minX, x);
+		    maxX = Math.max(maxX, x);
+		    minY = Math.min(minY, y);
+		    maxY = Math.max(maxY, y);
+		}
+	    }
+	}
+	if (minX != Integer.MAX_VALUE) {
+	    double scale = canvas.getScale();
+	    int width = 1 + maxX - minX;
+	    int height = 1 + maxY - minY;
+	    if (scale == 1.0) {
+		canvas.repaint(minX * tileSize.width,
+			       minY * tileSize.height,
+			       width * tileSize.width,
+			       height * tileSize.height);
+	    } else {
+		double x = scale * minX * tileSize.width;
+		double y = scale * minY * tileSize.height;
+		double dw = width * tileSize.width;
+		double dh = height * tileSize.height;
+		int ix = (int) x;
+		dw += x - ix;
+		int iy = (int) y;
+		dh += y - iy;
+		canvas.repaint(ix, iy, (int) Math.ceil(dw), 
+			       (int) Math.ceil(dh));
+	    }
+
+	}
+	lastFrame = null;
+    }
+
+    void paint(Graphics2D g) {
+	assert shown;
         for (int y = 0; y < grid.length; y++) {
             for (int x = 0; x < grid[y].length; x++) {
                 @SuppressWarnings("unchecked")
@@ -110,7 +171,7 @@ public final class AnimationFrame {
                 } else {
                     System.out.print(' ');
                     Tile t = cell.get(cell.size() - 1);
-                    System.out.print(t.getPrinted());
+                    System.out.print(t.getText());
                 }
             }
             System.out.println("        ");
