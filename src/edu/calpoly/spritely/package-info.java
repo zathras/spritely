@@ -74,7 +74,7 @@
  * display it.
  * <p>
  * See also 
- * <a href="https://spritely.jovial.com/">https://spritely.jovial.com/</a>,
+ * <a href="https://spritely.jovial.com/" target="_top">https://spritely.jovial.com/</a>,
  * and <a href="doc-files/LICENSE.txt">the license</a>.
  *
  *
