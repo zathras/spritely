@@ -1,6 +1,6 @@
 #!/bin/sh
 cd `dirname $0`/..
-rm -rf out
+rm -rf out/classes
 mkdir -p out/classes
 javac -Xlint:unchecked -Xlint:deprecation -sourcepath src -d out/classes \
 	src/edu/calpoly/spritely/*.java
