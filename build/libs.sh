@@ -10,5 +10,3 @@ fi
 cd out/classes
 jar cf ../spritely.jar *
 echo "Created out/spritely.jar"
-cd ../../docs/javadocs
-zip -r ../../out/spritely-javadocs.zip *
