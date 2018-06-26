@@ -20,11 +20,15 @@ Spritely, a Simple Sprite Animation Framework
 <img alt="*" src="pink_flying_toaster_morgaine1976-300px.png" width="356" height="300">
 </td>
 <td>
-&nbsp;&nbsp;
-</td align=right>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</td>
 <td>
 <font size="+2">Spritely</font>
 <br>
+<br>
+Spritely is a simple grid-based animation framework
+with a text mode.  It was written for an introductory
+OO programming course.
 <br>
 <br>
 See <a href="javadocs/index.html?edu/calpoly/spritely/package-summary.html">The Javadocs</a> for a description of 
@@ -34,12 +38,54 @@ Spritely.
 See <a href="https://github.com/wffoote/spritely">The Github Repository</a>
 for releases, source code, etc.
 </td>
+<td>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</td>
 </tr>
 </table>
 <p>
+<table><tr>
+    <td><img src="spritely_g.png"></td>
+    <td>&nbsp;&nbsp;</td>
+    <td><img src="spritely_t.png"></td>
+</tr></table>
+<p>
+This package provides a framework for showing an animated grid of 
+equal-size tiles, which is a limited form of sprite animation.  
+It was written for educational purposes in an introductory OO
+class.  It has a few unique features:
+<ul>
+<li>It strives to be as simple as possible, so as to not overload
+    students with language features, unfamiliar idioms, or complex
+    code to read through.
+
+<li>It does <em>not</em> force the student to do all their work via
+    callbacks, as is typical for GUIs.  The student is presented with
+    a single-threaded model, where they ask the frame to display each
+    animation frame.
+
+<li>It allows programs to be run in text mode, using character-based
+    graphics.  This allows students to do their development on a
+    remote server via ssh, so they don't have to do system
+    administration on their personal computer, like installing
+    a Java environment, setting the CLASSPATH, or installing an X server.
+
+<li>It restricts the user to equal-sized tiles.  This is more or less
+    necessary to enable character mode.
+
+<li>It handles the needed logic to maintain a given frame rate.  It
+    handles the case where a program is suspended and woken back up,
+    by moving the notion of time forward.
+
+<li>It features simple callbacks for mouse clicks and key typed events,
+    and it simulates these events in text mode.
+</ul>
+<p>
+See <a href="javadocs/index.html?edu/calpoly/spritely/package-summary.html">The Javadocs</a> for 
+full documentation.
 <p>
 <center>
-<img src="./javadocs/edu/calpoly/spritely/doc-files/uml.svg" alt="*" width="80%">
+<img src="./javadocs/edu/calpoly/spritely/doc-files/uml.svg" alt="*" width="75%">
 </center>
 <p>
 </body>
