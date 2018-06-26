@@ -1,5 +1,8 @@
 #!/bin/sh
+
 if [ "$JAVA8_HOME" = "" ] ; then
+    # Insist on JDK 1.8, so that the release that gets published
+    # works for 1.8 and above.
     echo "Please set the JAVA8_HOME environment variable."
     exit 1
 fi
