@@ -128,8 +128,8 @@ public final class AnimationFrame {
 	    } else {
 		double x = scale * minX * tileSize.width;
 		double y = scale * minY * tileSize.height;
-		double dw = width * tileSize.width;
-		double dh = height * tileSize.height;
+		double dw = scale * width * tileSize.width;
+		double dh = scale * height * tileSize.height;
 		int ix = (int) x;
 		dw += x - ix;
 		int iy = (int) y;

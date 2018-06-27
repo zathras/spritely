@@ -97,7 +97,7 @@ final class SpriteScreen implements SpriteDisplay {
 	    // really is just intended for debugging.
             System.out.println();
             System.out.println("Spritely:  Note that you can simulate a " +
-                               "mouse click ty typing \"m\".");
+                               "mouse click by typing \"m\".");
             System.out.println();
             mouseNoticeGiven = true;
         }
