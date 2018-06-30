@@ -44,6 +44,9 @@ import java.util.LinkedList;
  *    while (!window.getStopped()) {
  *        update any needed data structures
  *        AnimationFrame frame = window.waitForNextFrame();        
+ *        if (frame == null) {   // Stopped
+ *            break;
+ *        }
  *        call frame.addTile(x, y, Tile) for the displayed tiles;
  *        window.showNextFrame();
  *        do anything else you want to do
@@ -355,7 +358,8 @@ public class SpriteWindow {
      * is stopped.  If the current thread is interrupted, the window will
      * be stopped.
      *
-     * @return  The frame where client code can add tiles to be drawn
+     * @return  The frame where client code can add tiles to be drawn, or null
+     *		if this animation is not running.
      *
      * @see AnimationFrame#addTile(int, int, Tile)
      */
@@ -428,7 +432,8 @@ public class SpriteWindow {
      * by waitForNextFrame is displayed to the screen.
      *
      * @throws IllegalStateException if waitForNextFrame() has not been called,
-     *				    or if started has not been called.
+     *				    or if start has not been called, or if the
+     *				    animation has been stopped.
      * @see #waitForNextFrame()
      */
     public void showNextFrame() {
@@ -446,7 +451,7 @@ public class SpriteWindow {
      * constantly being sent to the home position, which tends to
      * scramble debut output.
      *
-     * @param pauseMS   The number of seconds to pause
+     * @param pauseMS   The number of milliseconds to pause
      */
      public void pauseAnimation(int pauseMS) {
         try {
