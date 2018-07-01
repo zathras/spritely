@@ -166,11 +166,12 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     }
 
     @Override
-    public synchronized void paint(Graphics graphicsArg) {
+    public synchronized void paintComponent(Graphics graphicsArg) {
+	super.paintComponent(graphicsArg);
         if (animationFrame == null) {
             return;
         }
-        Graphics2D g = (Graphics2D) graphicsArg;
+        Graphics2D g = (Graphics2D) graphicsArg.create();
         g.setColor(Color.black);
         Dimension d = getSize();
         g.fillRect(0, 0, d.width, d.height);

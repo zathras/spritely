@@ -72,6 +72,11 @@ import java.util.LinkedList;
  */
 public class SpriteWindow {
 
+    static {
+	// See https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux
+	System.setProperty("sun.java2d.opengl", "true");
+    }
+
     /**
      * The default number of frames per second.
      */
@@ -447,25 +452,50 @@ public class SpriteWindow {
     /**
      * Pause the animation for the given time, and reset the animation
      * clock.  Pausing the program might be useful for  debugging.  This
-     * is particularly ture in text mode, since the screen's cursor is 
+     * is particularly true in text mode, since the screen's cursor is 
      * constantly being sent to the home position, which tends to
      * scramble debut output.
+     * <p>
+     * Return immediately if the animation stops, e.g. because the
+     * window is closed.
      *
      * @param pauseMS   The number of milliseconds to pause
+     * 
+     * @throws IllegalStateException  if we haven't been started
      */
      public void pauseAnimation(int pauseMS) {
-        try {
-            Thread.currentThread().sleep(pauseMS);
-        } catch (InterruptedException ex) {
-            stop();
-            Thread.currentThread().interrupt();
+        if (display == null) {
+            throw new IllegalStateException();
         }
-        //
-        // Reset the animation clock:
-        //
-        double frameMS = 1000 / fps;
-        double timeSinceStart = getTimeSinceStart();
-        long now = System.currentTimeMillis();
-        startTime = now - (long) (timeSinceStart + frameMS);
-     }
+	if (pauseMS <= 0) {
+	    return;
+	}
+	long timeWanted = System.currentTimeMillis() + pauseMS;
+	synchronized(display) {
+	    for (;;) {
+		if (!running) {
+		    return;
+		}
+		long now = System.currentTimeMillis();
+		long toWait = timeWanted - now;
+		if (toWait <= 0L) {
+		    break;
+		}
+		try {
+		    display.wait(toWait);
+		} catch (InterruptedException ex) {
+		    stop();
+		    Thread.currentThread().interrupt();
+		    return;
+		}
+	    }
+	    //
+	    // Reset the animation clock:
+	    //
+	    double frameMS = 1000 / fps;
+	    double timeSinceStart = getTimeSinceStart();
+	    long now = System.currentTimeMillis();
+	    startTime = now - (long) (timeSinceStart + frameMS);
+	}
+    }
 }
