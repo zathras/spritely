@@ -48,6 +48,13 @@ interface SpriteDisplay {
     public void showFrame(AnimationFrame f);
 
     /**
+     * Set up for the given initial frame of animation
+     *
+     * @param f the frame to show
+     */
+    public void setInitialFrame(AnimationFrame f);
+
+    /**
      * Do any polling for input that might be needed.  Return
      * true if input was received.
      *

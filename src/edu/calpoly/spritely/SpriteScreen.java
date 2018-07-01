@@ -90,6 +90,10 @@ final class SpriteScreen implements SpriteDisplay {
         frameShown = true;
     }
 
+    public void setInitialFrame(AnimationFrame f) {
+	showFrame(f);
+    }
+
     @Override
     public synchronized boolean pollForInput(boolean mouseWanted) {
         if (!mouseNoticeGiven && frameShown && mouseWanted) {

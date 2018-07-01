@@ -22,9 +22,9 @@
 
 package edu.calpoly.spritely;
 
-import java.awt.Graphics;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -35,6 +35,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferStrategy;
 import javax.swing.JFrame;
 import javax.swing.JComponent;
 import javax.swing.JScrollPane;
@@ -48,6 +49,7 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 
     private final SpriteWindow window;
     private final JFrame frame;
+    private BufferStrategy bufferStrategy;
     private AnimationFrame animationFrame = null;
     private double scale = 1.0;
     private long keyDownEventWhen = Long.MIN_VALUE;
@@ -61,6 +63,7 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     double getScale() {
 	return scale;
     }
+
 
     @Override
     public void start() {
@@ -99,6 +102,8 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
         });
         frame.pack();
         frame.setVisible(true);
+	frame.createBufferStrategy(2);
+	bufferStrategy = frame.getBufferStrategy();
 	if (!window.getSilent()) {
 	    System.out.println();
 	    System.out.println("Spritely:  Type alt-plus, alt-minus, and " +
@@ -125,22 +130,26 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
         }
     }
 
-    private synchronized void handleKeyTyped(KeyEvent e) {
-        if (e.getWhen() != keyDownEventWhen
-            || (e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == 0)
-        {
-            // We don't want to send the alt-plus, alt-minus or alt-0
-            // to our client.
-            window.keyTyped(e.getKeyChar());
-            notifyAll();
-        }
+    private void handleKeyTyped(KeyEvent e) {
+	synchronized(window.LOCK) {
+	    if (e.getWhen() != keyDownEventWhen
+		|| (e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == 0)
+	    {
+		// We don't want to send the alt-plus, alt-minus or alt-0
+		// to our client.
+		window.keyTyped(e.getKeyChar());
+		window.LOCK.notifyAll();
+	    }
+	}
     }
 
-    private synchronized void handleMouseClicked(MouseEvent e) {
-        double sx = Math.round(e.getX() / scale);
-        double sy = Math.round(e.getY() / scale);
-        window.mouseClicked(sx, sy);
-        notifyAll();
+    private void handleMouseClicked(MouseEvent e) {
+	synchronized(window.LOCK) {
+	    double sx = Math.round(e.getX() / scale);
+	    double sy = Math.round(e.getY() / scale);
+	    window.mouseClicked(sx, sy);
+	    window.LOCK.notifyAll();
+	}
     }
 
     private void setScale(double scale) {
@@ -158,7 +167,7 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     }
 
     @Override
-    public synchronized void closeFrame() {
+    public void closeFrame() {
         SwingUtilities.invokeLater(() -> {
             frame.setVisible(false);
             frame.dispose();
@@ -166,25 +175,48 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     }
 
     @Override
-    public synchronized void paintComponent(Graphics graphicsArg) {
-	super.paintComponent(graphicsArg);
-        if (animationFrame == null) {
-            return;
-        }
-        Graphics2D g = (Graphics2D) graphicsArg.create();
-        g.setColor(Color.black);
-        Dimension d = getSize();
-        g.fillRect(0, 0, d.width, d.height);
-        if (scale != 0) {
-            g.scale(scale, scale);
-        }
-        animationFrame.paint(g);
+    public void paint(Graphics graphicsArg) {
+	synchronized(window.LOCK) {
+	    if (animationFrame == null) {
+		return;
+	    }
+	    Graphics2D g = (Graphics2D) graphicsArg.create();
+	    g.setColor(Color.black);
+	    Dimension d = getSize();
+	    g.fillRect(0, 0, d.width, d.height);
+	    if (scale != 0) {
+		g.scale(scale, scale);
+	    }
+	    animationFrame.paint(g);
+	}
     }
 
     @Override
-    public synchronized void showFrame(AnimationFrame f) {
-        animationFrame = f;
-        f.setRepaintArea(this);
+    public void showFrame(AnimationFrame f) {
+	synchronized(window.LOCK) {
+	    animationFrame = f;
+	    if (!f.show()) {
+		return;
+	    }
+	}
+	do {
+	    do {
+		Graphics g = bufferStrategy.getDrawGraphics();
+		frame.paint(g);
+		g.dispose();
+	    } while (bufferStrategy.contentsRestored());
+	    bufferStrategy.show();
+	} while (bufferStrategy.contentsLost());
+    }
+
+    public void setInitialFrame(AnimationFrame f) {
+	synchronized(window.LOCK) {
+	    assert animationFrame == null;
+	    animationFrame = f;
+	    if (f.show()) {
+		repaint();
+	    }
+	}
     }
 
     @Override

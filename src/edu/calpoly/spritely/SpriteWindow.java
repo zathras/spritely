@@ -23,6 +23,7 @@
 package edu.calpoly.spritely;
 
 import java.awt.GraphicsEnvironment;
+import java.awt.Toolkit;
 import javax.swing.JFrame;
 import java.util.LinkedList;
 
@@ -72,11 +73,6 @@ import java.util.LinkedList;
  */
 public class SpriteWindow {
 
-    static {
-	// See https://stackoverflow.com/questions/41001623/java-animation-programs-running-jerky-in-linux
-	System.setProperty("sun.java2d.opengl", "true");
-    }
-
     /**
      * The default number of frames per second.
      */
@@ -87,6 +83,7 @@ public class SpriteWindow {
      */
     public final static Size DEFAULT_TILE_SIZE = new Size(32, 32);
 
+    final Object LOCK = new Object();
     final String name;
     Size gridSize;
     Size tileSize = DEFAULT_TILE_SIZE;
@@ -246,9 +243,9 @@ public class SpriteWindow {
     }
     
     void setOpened() {
-	synchronized(display) {
+	synchronized(LOCK) {
 	    opened = true;
-	    display.notifyAll();
+	    LOCK.notifyAll();
 	}
     }
 
@@ -267,7 +264,7 @@ public class SpriteWindow {
         if (!started) {
             return false;
         }
-        synchronized(display) {
+        synchronized(LOCK) {
             return running;
         }
     }
@@ -316,7 +313,7 @@ public class SpriteWindow {
         started = true;
         running = true;
 	if (currentAnimationFrame != null) {
-	    display.showFrame(currentAnimationFrame);
+	    display.setInitialFrame(currentAnimationFrame);
 	}
         display.start();
         startTime = System.currentTimeMillis();
@@ -331,12 +328,12 @@ public class SpriteWindow {
      */
     public void stop() {
         checkStarted(true);
-        synchronized(display) {
+        synchronized(LOCK) {
             if (running) {
                 running = false;
                 display.closeFrame();
             }
-            display.notifyAll();
+            LOCK.notifyAll();
         }
     }
 
@@ -369,13 +366,13 @@ public class SpriteWindow {
      * @see AnimationFrame#addTile(int, int, Tile)
      */
     public AnimationFrame waitForNextFrame() {
-        synchronized(display) {
+        synchronized(LOCK) {
             currFrame++;
         }
         boolean excused = false;
         for (;;) {
             Runnable event = null;
-            synchronized(display) {
+            synchronized(LOCK) {
                 if (!running) {
                     return null;
                 } else if (!eventQueue.isEmpty()) {
@@ -385,7 +382,7 @@ public class SpriteWindow {
 		} else if (!opened) {
 		    assert currFrame == 0;
 		    try {
-			display.wait();
+			LOCK.wait();
 		    } catch (InterruptedException ex) {
 			stop();
 			Thread.currentThread().interrupt();
@@ -414,7 +411,7 @@ public class SpriteWindow {
                         break;
                     } else {
                         try {
-                            display.wait(waitTime);
+                            LOCK.wait(waitTime);
                         } catch (InterruptedException ex) {
                             stop();
                             Thread.currentThread().interrupt();
@@ -471,7 +468,7 @@ public class SpriteWindow {
 	    return;
 	}
 	long timeWanted = System.currentTimeMillis() + pauseMS;
-	synchronized(display) {
+	synchronized(LOCK) {
 	    for (;;) {
 		if (!running) {
 		    return;
@@ -482,7 +479,7 @@ public class SpriteWindow {
 		    break;
 		}
 		try {
-		    display.wait(toWait);
+		    LOCK.wait(toWait);
 		} catch (InterruptedException ex) {
 		    stop();
 		    Thread.currentThread().interrupt();
