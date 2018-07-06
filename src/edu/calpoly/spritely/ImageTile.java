@@ -36,6 +36,7 @@ import javax.imageio.ImageIO;
  * A tile that shows an image.  The image may be any format supported
  * by Java's ImageIO class, which should include PNG and JPEG.  Alpha
  * blending is supported:  A pixel in a tile may be semi-transparent.
+ * ImageTile instances are immutable.
  *
  *      @author         Bill Foote, http://jovial.com
  *
