@@ -195,18 +195,31 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     public void showFrame(AnimationFrame f) {
 	synchronized(window.LOCK) {
 	    animationFrame = f;
-	    if (!f.show()) {
+	    if (!f.show() || !window.isRunning()) {
+                // Check isRunning() in case the window closed out from
+                // under us.
 		return;
 	    }
 	}
-	do {
-	    do {
-		Graphics g = bufferStrategy.getDrawGraphics();
-		frame.paint(g);
-		g.dispose();
-	    } while (bufferStrategy.contentsRestored());
-	    bufferStrategy.show();
-	} while (bufferStrategy.contentsLost());
+        try {
+            do {
+                do {
+                    Graphics g = bufferStrategy.getDrawGraphics();
+                    frame.paint(g);
+                    g.dispose();
+                } while (bufferStrategy.contentsRestored());
+                bufferStrategy.show();
+            } while (bufferStrategy.contentsLost());
+        } catch (IllegalStateException ex) {
+            // If the window is closed while this is in process, we 
+            // sometimes get an IllegalStateException here.  This looks
+            // like it's a manifestation of JDK bug 6933331:
+            //    https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331
+            // It's relatively harmless, and has been around since 2010.
+            System.err.println("Spritely ignoring exception - window closing?");
+            System.err.println("  Probably https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331");
+            ex.printStackTrace();
+        }
     }
 
     public void setInitialFrame(AnimationFrame f) {

@@ -39,7 +39,7 @@ import java.util.LinkedList;
  * <p>
  * The basic lifecycle of a SpriteWindow application is as follows:
  * <pre>
- *    SpriteWindow window = new SpriteWindow();
+ *    SpriteWindow window = new SpriteWindow(...);
  *    window.setXXX() (frames/second, callbacks, etc.)
  *    window.start();
  *    while (!window.getStopped()) {
