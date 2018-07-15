@@ -402,7 +402,9 @@ public class SpriteWindow {
                     long nextTime = startTime + (long) timeSinceStart;
                     long now = System.currentTimeMillis();
                     long waitTime = nextTime - now;
-                    if (waitTime < -4 * frameMS) {
+                    if (waitTime < -4 * frameMS 
+		        || (excused && waitTime < -frameMS))
+		    {
 			// Don't drop more than 4 frames
                         if (excused) {
                             excused = false;
