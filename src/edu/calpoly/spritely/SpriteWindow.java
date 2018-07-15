@@ -343,12 +343,19 @@ public class SpriteWindow {
      * if the animation is too slow.  This can also happen if the program
      * is suspended for a time, e.g. for debugging.  It is therefore 
      * recommended that all time-based events in an animation be based off 
-     * the time value returned by this  method, rather than e.g.
+     * the time value returned by this method, rather than e.g.
      * System.currentTimeMillis().
+     * <p>
+     * If the system can't keep up with the frame rate, it will drop up
+     * to four frames.  Past that limit, it will print a diagnostic
+     * message to stdout, and "pause" the animation (that is, it will
+     * not advance getTimeSinceStart() even though the wall clock time
+     * indicates that it "should").
      *
      * @return  The total elapsed time, adjusted for pauses, in milliseconds.
      *
      * @see #pauseAnimation(int)
+     * @see #setSilent(boolean)
      * @see System#currentTimeMillis()
      */
     public double getTimeSinceStart() {
@@ -395,18 +402,22 @@ public class SpriteWindow {
                     long nextTime = startTime + (long) timeSinceStart;
                     long now = System.currentTimeMillis();
                     long waitTime = nextTime - now;
-                    if (waitTime < -frameMS) {
+                    if (waitTime < -4 * frameMS) {
+			// Don't drop more than 4 frames
                         if (excused) {
                             excused = false;
                         } else if (!silent) {
                             System.out.println(
-                                "NOTE:  Animation fell behind by " +
+                                "NOTE (Spritely):  Animation fell behind by " +
 				(long) Math.ceil(-frameMS - waitTime) + 
-				" ms on frame " + currFrame +
-				".  Animation clock reset.");
+				" ms on frame " + currFrame + ".");
+			    System.out.println(
+				"                  Animation clock reset.");
                         }
                         startTime = now - (long) timeSinceStart;
                         break;
+                    } else if (waitTime < -frameMS) {
+			currFrame++;	// Drop a frame
                     } else if (waitTime <= 0) {
                         break;
                     } else {
