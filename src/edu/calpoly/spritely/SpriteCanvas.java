@@ -49,7 +49,7 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 
     private final SpriteWindow window;
     private final JFrame frame;
-    private BufferStrategy bufferStrategy;
+    private BufferStrategy bufferStrategy = null;
     private AnimationFrame animationFrame = null;
     private double scale = 1.0;
     private long keyDownEventWhen = Long.MIN_VALUE;
@@ -58,6 +58,18 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
         setDoubleBuffered(true);                // Because I'm paranoid
         this.window = window;
         frame = new JFrame(window.name);
+    }
+
+    @Override
+    public void addNotify() {
+	super.addNotify();
+	frame.createBufferStrategy(2);
+	BufferStrategy strategy = frame.getBufferStrategy();
+	synchronized(window.LOCK) {
+	    bufferStrategy = strategy;
+	    window.LOCK.notifyAll();
+	}
+	assert isDisplayable();
     }
 
     double getScale() {
@@ -102,8 +114,6 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
         });
         frame.pack();
         frame.setVisible(true);
-	frame.createBufferStrategy(2);
-	bufferStrategy = frame.getBufferStrategy();
 	if (!window.getSilent()) {
 	    System.out.println();
 	    System.out.println("Spritely:  Type alt-plus, alt-minus, and " +
@@ -193,23 +203,37 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 
     @Override
     public void showFrame(AnimationFrame f) {
+	BufferStrategy strategy = null;
 	synchronized(window.LOCK) {
 	    animationFrame = f;
-	    if (!f.show() || !window.isRunning()) {
-                // Check isRunning() in case the window closed out from
-                // under us.
+	    if (!f.show()) {
 		return;
+	    }
+	    while (strategy == null)  {
+		if (!window.isRunning()) {
+		    // Check isRunning() in case the window closed out from
+		    return;
+		}
+		strategy = bufferStrategy;
+		if (strategy == null) {
+		    try {
+			window.LOCK.wait();
+		    } catch (InterruptedException ex) {
+			Thread.currentThread().interrupt();
+			return;
+		    }
+		}
 	    }
 	}
         try {
             do {
                 do {
-                    Graphics g = bufferStrategy.getDrawGraphics();
+                    Graphics g = strategy.getDrawGraphics();
                     frame.paint(g);
                     g.dispose();
-                } while (bufferStrategy.contentsRestored());
-                bufferStrategy.show();
-            } while (bufferStrategy.contentsLost());
+                } while (strategy.contentsRestored());
+                strategy.show();
+            } while (strategy.contentsLost());
         } catch (IllegalStateException ex) {
             // If the window is closed while this is in process, we 
             // sometimes get an IllegalStateException here.  This looks
