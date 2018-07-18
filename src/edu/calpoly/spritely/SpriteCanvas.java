@@ -63,13 +63,22 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     @Override
     public void addNotify() {
 	super.addNotify();
-	frame.createBufferStrategy(2);
-	BufferStrategy strategy = frame.getBufferStrategy();
-	synchronized(window.LOCK) {
-	    bufferStrategy = strategy;
-	    window.LOCK.notifyAll();
-	}
-	assert isDisplayable();
+	// Doing the following in invokeLater() shouldn't be necessary,
+	// but it might help with JDK bug 6933331.  Since there is an open
+	// JDK bug, being maximally conservative seems in order, and doing this
+	// on the dispatch thread is probably the most thoroughly tested.
+	// See the other reference to that bug in this file.
+	SwingUtilities.invokeLater(new Runnable() {
+	    @Override
+	    public void run() {
+		frame.createBufferStrategy(2);
+		BufferStrategy strategy = frame.getBufferStrategy();
+		synchronized(window.LOCK) {
+		    bufferStrategy = strategy;
+		    window.LOCK.notifyAll();
+		}
+	    }
+	});
     }
 
     double getScale() {
@@ -202,7 +211,16 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     }
 
     @Override
-    public void showFrame(AnimationFrame f) {
+    public void showFrame(final AnimationFrame f) {
+	SwingUtilities.invokeLater(new Runnable() {
+	    @Override
+	    public void run() {
+		doShowFrame(f);
+	    }
+	});
+    }
+
+    private void doShowFrame(AnimationFrame f) {
 	BufferStrategy strategy = null;
 	synchronized(window.LOCK) {
 	    animationFrame = f;
@@ -216,12 +234,10 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 		}
 		strategy = bufferStrategy;
 		if (strategy == null) {
-		    try {
-			window.LOCK.wait();
-		    } catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
-			return;
-		    }
+		    throw new IllegalStateException("null bufferStrategy ");
+		    // bufferStrategy gets set on the event dispatch
+		    // thread, and that is queued before showFrame()
+		    // is called.
 		}
 	    }
 	}
@@ -240,6 +256,12 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
             // like it's a manifestation of JDK bug 6933331:
             //    https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331
             // It's relatively harmless, and has been around since 2010.
+	    //
+	    // NOTE:  Perhaps moving this code to the event dispatch thread
+	    //        has helped?  I did that on 7/18/18.  If this exception
+	    //        isn't seen for a couple months after that, perhaps
+	    //        I can declare victory?
+
             System.err.println("Spritely ignoring exception - window closing?");
             System.err.println("  Probably https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331");
             ex.printStackTrace();
