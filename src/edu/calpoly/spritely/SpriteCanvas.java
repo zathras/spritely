@@ -211,34 +211,26 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
     }
 
     @Override
-    public void showFrame(final AnimationFrame f) {
-	SwingUtilities.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		doShowFrame(f);
-	    }
-	});
-    }
-
-    private void doShowFrame(AnimationFrame f) {
+    public void showFrame(AnimationFrame f) {
 	BufferStrategy strategy = null;
 	synchronized(window.LOCK) {
 	    animationFrame = f;
 	    if (!f.show()) {
 		return;
 	    }
-	    while (strategy == null)  {
+	    strategy = bufferStrategy;
+	    while (strategy == null) {
 		if (!window.isRunning()) {
 		    // Check isRunning() in case the window closed out from
 		    return;
 		}
-		strategy = bufferStrategy;
-		if (strategy == null) {
-		    throw new IllegalStateException("null bufferStrategy ");
-		    // bufferStrategy gets set on the event dispatch
-		    // thread, and that is queued before showFrame()
-		    // is called.
+		try {
+		    window.LOCK.wait();
+		} catch (InterruptedException ex) {
+		    Thread.currentThread().interrupt();
+		    return;
 		}
+		strategy = bufferStrategy;
 	    }
 	}
         try {
@@ -256,11 +248,6 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
             // like it's a manifestation of JDK bug 6933331:
             //    https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331
             // It's relatively harmless, and has been around since 2010.
-	    //
-	    // NOTE:  Perhaps moving this code to the event dispatch thread
-	    //        has helped?  I did that on 7/18/18.  If this exception
-	    //        isn't seen for a couple months after that, perhaps
-	    //        I can declare victory?
 
             System.err.println("Spritely ignoring exception - window closing?");
             System.err.println("  Probably https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331");
