@@ -22,11 +22,18 @@
 
 package edu.calpoly.spritely;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Frame;
+import java.awt.Rectangle;
+import java.awt.ScrollPane;
+import java.awt.Canvas;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
 import java.awt.Graphics2D;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
@@ -35,12 +42,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.awt.image.BufferStrategy;
+import javax.swing.SwingUtilities;
+import javax.swing.JScrollPane;
 import javax.swing.JFrame;
 import javax.swing.JComponent;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
 
 //
 // The main display window in graphical mode.
@@ -49,36 +56,18 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 
     private final SpriteWindow window;
     private final JFrame frame;
-    private BufferStrategy bufferStrategy = null;
-    private AnimationFrame animationFrame = null;
+    private AnimationFrame lastAnimationFrame = null;
+    private BufferStrategy bufferStrategy;
     private double scale = 1.0;
     private long keyDownEventWhen = Long.MIN_VALUE;
+    private BufferedImage currentBuffer;
+    private BufferedImage nextBuffer;
 
     SpriteCanvas(SpriteWindow window) {
-        setDoubleBuffered(true);                // Because I'm paranoid
         this.window = window;
+	setDoubleBuffered(false);
         frame = new JFrame(window.name);
-    }
-
-    @Override
-    public void addNotify() {
-	super.addNotify();
-	// Doing the following in invokeLater() shouldn't be necessary,
-	// but it might help with JDK bug 6933331.  Since there is an open
-	// JDK bug, being maximally conservative seems in order, and doing this
-	// on the dispatch thread is probably the most thoroughly tested.
-	// See the other reference to that bug in this file.
-	SwingUtilities.invokeLater(new Runnable() {
-	    @Override
-	    public void run() {
-		frame.createBufferStrategy(2);
-		BufferStrategy strategy = frame.getBufferStrategy();
-		synchronized(window.LOCK) {
-		    bufferStrategy = strategy;
-		    window.LOCK.notifyAll();
-		}
-	    }
-	});
+	frame.setLayout(new BorderLayout());
     }
 
     double getScale() {
@@ -104,13 +93,25 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
                 handleMouseClicked(e);
             }
         });
-        JScrollPane sp = new JScrollPane(this);
-        frame.getContentPane().add(sp); // , java.awt.BorderLayout.CENTER);
         Dimension d = new Dimension(
                 window.gridSize.width * window.tileSize.width,
                 window.gridSize.height * window.tileSize.height);
         setPreferredSize(d);
-        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+	currentBuffer = new BufferedImage(d.width, d.height, 
+					  BufferedImage.TYPE_INT_RGB);
+	nextBuffer = new BufferedImage(d.width, d.height, 
+				       BufferedImage.TYPE_INT_RGB);
+	if (lastAnimationFrame == null) {
+	    Graphics2D g = currentBuffer.createGraphics();
+	    g.setColor(Color.black);
+	    g.fillRect(0, 0, d.width, d.height);
+	    g.dispose();
+	} else {
+	    Rectangle damage = lastAnimationFrame.calculateDamage(null);
+	    lastAnimationFrame.paint(currentBuffer, null, damage);
+	}
+        JScrollPane sp = new JScrollPane(this);
+        frame.add(sp);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -121,15 +122,17 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 		window.setOpened();
 	    }
         });
-        frame.pack();
-        frame.setVisible(true);
+	frame.pack();
+	frame.createBufferStrategy(2);
+	bufferStrategy = frame.getBufferStrategy();
+	frame.setVisible(true);
+
 	if (!window.getSilent()) {
 	    System.out.println();
 	    System.out.println("Spritely:  Type alt-plus, alt-minus, and " +
 			       "alt-zero to zoom");
 	    System.out.println();
 	}
-
     }
 
     private void handleKeyPressed(KeyEvent e) {
@@ -187,65 +190,65 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
 
     @Override
     public void closeFrame() {
-        SwingUtilities.invokeLater(() -> {
-            frame.setVisible(false);
-            frame.dispose();
-        });
+	SwingUtilities.invokeLater(new Runnable() {
+	    @Override
+	    public void run() {
+		frame.setVisible(false);
+		frame.dispose();
+	    }
+	});
     }
 
     @Override
     public void paint(Graphics graphicsArg) {
 	synchronized(window.LOCK) {
-	    if (animationFrame == null) {
-		return;
-	    }
-	    Graphics2D g = (Graphics2D) graphicsArg.create();
-	    g.setColor(Color.black);
-	    Dimension d = getSize();
-	    g.fillRect(0, 0, d.width, d.height);
-	    if (scale != 0) {
+	    if (scale == 1.0) {
+		graphicsArg.drawImage(currentBuffer, 0, 0, null);
+	    } else {
+		Graphics2D g = (Graphics2D) graphicsArg.create();
 		g.scale(scale, scale);
+		g.drawImage(currentBuffer, 0, 0, null);
+		g.dispose();
 	    }
-	    animationFrame.paint(g);
 	}
     }
 
     @Override
     public void showFrame(AnimationFrame f) {
-	BufferStrategy strategy = null;
+	if (!window.isRunning()) {
+	    return;
+	}
+	// Bounding rectangle for changed tiles
+	Rectangle damage = f.calculateDamage(lastAnimationFrame);
+	lastAnimationFrame = f;
+	if (damage.isEmpty()) {
+	    return;
+	}
+	f.paint(nextBuffer, currentBuffer, damage);
 	synchronized(window.LOCK) {
-	    animationFrame = f;
-	    if (!f.show()) {
-		return;
-	    }
-	    strategy = bufferStrategy;
-	    while (strategy == null) {
-		if (!window.isRunning()) {
-		    // Check isRunning() in case the window closed out from
-		    return;
-		}
-		try {
-		    window.LOCK.wait();
-		} catch (InterruptedException ex) {
-		    Thread.currentThread().interrupt();
-		    return;
-		}
-		strategy = bufferStrategy;
-	    }
+	    BufferedImage tmp = nextBuffer;
+	    nextBuffer = currentBuffer;
+	    currentBuffer = tmp;
 	}
         try {
             do {
                 do {
-                    Graphics g = strategy.getDrawGraphics();
-                    frame.paint(g);
-                    g.dispose();
-                } while (strategy.contentsRestored());
-                strategy.show();
-            } while (strategy.contentsLost());
+		    synchronized(window.LOCK) {
+			if (!window.isRunning()) {
+			    return;
+			}
+		    }
+		    Graphics bsg = bufferStrategy.getDrawGraphics();
+		    frame.paint(bsg);
+		    bsg.dispose();
+                } while (bufferStrategy.contentsRestored());
+                bufferStrategy.show();
+            } while (bufferStrategy.contentsLost());
         } catch (IllegalStateException ex) {
             // If the window is closed while this is in process, we 
-            // sometimes get an IllegalStateException here.  This looks
-            // like it's a manifestation of JDK bug 6933331:
+            // might get an IllegalStateException here.  With a different
+	    // code structure one was seen that looked like a manifestation
+            // of JDK bug 6933331:
             //    https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331
             // It's relatively harmless, and has been around since 2010.
 
@@ -253,15 +256,18 @@ class SpriteCanvas extends JComponent implements SpriteDisplay {
             System.err.println("  Probably https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331");
             ex.printStackTrace();
         }
+	Toolkit.getDefaultToolkit().sync();
+	// sync() probably does nothing these days, and shouldn't be
+	// necessary when using bufferStrategy, but it can't hurt.
     }
 
+    //
+    // Called from SpriteWindow.start()
+    //
     public void setInitialFrame(AnimationFrame f) {
 	synchronized(window.LOCK) {
-	    assert animationFrame == null;
-	    animationFrame = f;
-	    if (f.show()) {
-		repaint();
-	    }
+	    assert lastAnimationFrame == null;
+	    lastAnimationFrame = f;
 	}
     }
 

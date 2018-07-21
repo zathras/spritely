@@ -48,7 +48,9 @@ interface SpriteDisplay {
     public void showFrame(AnimationFrame f);
 
     /**
-     * Set up for the given initial frame of animation
+     * Set up for the given initial frame of animation.  Calling this
+     * method is optional.  If it is called, it must be called before
+     * start().
      *
      * @param f the frame to show
      */
@@ -60,6 +62,8 @@ interface SpriteDisplay {
      *
      * @param mouseEvents       true iff mouse events are wanted, too
      * @return true if input was processed
+     * @throws IllegalStateException if start() has been called on the
+     *				     corresponding SpriteWindow.
      */
     public boolean pollForInput(boolean mouseEvents);
 }

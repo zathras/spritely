@@ -32,7 +32,7 @@ import java.util.LinkedList;
  * in an animation.  This is the main entry point for the Spritely
  * framework.
  * <p>
- * Tiles may overlap, that is, each position on the grid may have overlapping 
+ * Tiles may overlap, that is, each position on the grid may have multiple
  * tiles.  Each tile has both a graphical representation and a text
  * representation; in text mode, only the topmost tile can be seen.  Programs
  * may contain multiple SpriteWindow instances.
@@ -136,7 +136,7 @@ public class SpriteWindow {
     //
     // Throw IllegalStateExcption if started isn't in the right state
     //
-    private void checkStarted(boolean expected) {
+    void checkStarted(boolean expected) {
         if (started != expected) {
             throw new IllegalStateException("SpriteWindow.start()");
         }
@@ -152,6 +152,10 @@ public class SpriteWindow {
     public void setFps(double fps) {
         checkStarted(false);
         this.fps = fps;
+    }
+
+    double getFps() {
+	return fps;
     }
 
 
@@ -286,7 +290,7 @@ public class SpriteWindow {
 	if (currentAnimationFrame != null) {
 	    throw new IllegalStateException("getInitialFrame() already called");
 	}
-	currentAnimationFrame = new AnimationFrame(gridSize, tileSize, null);
+	currentAnimationFrame = new AnimationFrame(gridSize, tileSize);
 	return currentAnimationFrame;
     }
      
@@ -328,13 +332,15 @@ public class SpriteWindow {
      */
     public void stop() {
         checkStarted(true);
+	boolean wasRunning;
         synchronized(LOCK) {
+	    wasRunning = running;
             if (running) {
                 running = false;
-                display.closeFrame();
             }
             LOCK.notifyAll();
         }
+	display.closeFrame();
     }
 
     /**
@@ -437,8 +443,7 @@ public class SpriteWindow {
                 event.run();
             }
         }
-        currentAnimationFrame = 
-            new AnimationFrame(gridSize, tileSize, currentAnimationFrame);
+        currentAnimationFrame = new AnimationFrame(gridSize, tileSize);
         return currentAnimationFrame;
     }
 
