@@ -34,6 +34,7 @@ final class SpriteScreen implements SpriteDisplay {
     private boolean mouseNoticeGiven = false;
     private boolean frameShown = false;
     private SpriteWindow window;
+    private AnimationFrame initialFrame = null;
 
     SpriteScreen(SpriteWindow window) {
         this.window = window;
@@ -43,7 +44,12 @@ final class SpriteScreen implements SpriteDisplay {
         System.out.println();
         // Set the title:  http://tldp.org/HOWTO/Xterm-Title-3.html
         System.out.println("" + ((char) 27) + "]0;" + window.name + ((char) 7));
-        clearScreen();
+	if (initialFrame == null) {
+	    clearScreen();
+	} else {
+	    showFrame(initialFrame);
+	    initialFrame = null;
+	}
 	window.setOpened();
     }
 
@@ -91,7 +97,8 @@ final class SpriteScreen implements SpriteDisplay {
     }
 
     public void setInitialFrame(AnimationFrame f) {
-	showFrame(f);
+	assert initialFrame == null;
+	initialFrame = f;
     }
 
     @Override
