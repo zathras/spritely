@@ -23,7 +23,7 @@ HEADLESS=""
 
 # To test headless, set the java system property, and
 # put the terminal in character mode:
-stty -echo cbreak; HEADLESS=-Djava.awt.headless=true
+# stty -echo cbreak; HEADLESS=-Djava.awt.headless=true
 
 java $HEADLESS -cp out -ea Main
 reset_tty

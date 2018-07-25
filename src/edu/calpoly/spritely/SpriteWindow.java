@@ -23,6 +23,7 @@
 package edu.calpoly.spritely;
 
 import java.awt.GraphicsEnvironment;
+import java.awt.Toolkit;
 import javax.swing.JFrame;
 import java.util.LinkedList;
 
@@ -31,14 +32,14 @@ import java.util.LinkedList;
  * in an animation.  This is the main entry point for the Spritely
  * framework.
  * <p>
- * Tiles may overlap, that is, each position on the grid may have overlapping 
+ * Tiles may overlap, that is, each position on the grid may have multiple
  * tiles.  Each tile has both a graphical representation and a text
  * representation; in text mode, only the topmost tile can be seen.  Programs
  * may contain multiple SpriteWindow instances.
  * <p>
  * The basic lifecycle of a SpriteWindow application is as follows:
  * <pre>
- *    SpriteWindow window = new SpriteWindow();
+ *    SpriteWindow window = new SpriteWindow(...);
  *    window.setXXX() (frames/second, callbacks, etc.)
  *    window.start();
  *    while (!window.getStopped()) {
@@ -82,6 +83,7 @@ public class SpriteWindow {
      */
     public final static Size DEFAULT_TILE_SIZE = new Size(32, 32);
 
+    final Object LOCK = new Object();
     final String name;
     Size gridSize;
     Size tileSize = DEFAULT_TILE_SIZE;
@@ -134,7 +136,7 @@ public class SpriteWindow {
     //
     // Throw IllegalStateExcption if started isn't in the right state
     //
-    private void checkStarted(boolean expected) {
+    void checkStarted(boolean expected) {
         if (started != expected) {
             throw new IllegalStateException("SpriteWindow.start()");
         }
@@ -150,6 +152,10 @@ public class SpriteWindow {
     public void setFps(double fps) {
         checkStarted(false);
         this.fps = fps;
+    }
+
+    double getFps() {
+	return fps;
     }
 
 
@@ -241,9 +247,9 @@ public class SpriteWindow {
     }
     
     void setOpened() {
-	synchronized(display) {
+	synchronized(LOCK) {
 	    opened = true;
-	    display.notifyAll();
+	    LOCK.notifyAll();
 	}
     }
 
@@ -262,7 +268,7 @@ public class SpriteWindow {
         if (!started) {
             return false;
         }
-        synchronized(display) {
+        synchronized(LOCK) {
             return running;
         }
     }
@@ -284,7 +290,7 @@ public class SpriteWindow {
 	if (currentAnimationFrame != null) {
 	    throw new IllegalStateException("getInitialFrame() already called");
 	}
-	currentAnimationFrame = new AnimationFrame(gridSize, tileSize, null);
+	currentAnimationFrame = new AnimationFrame(gridSize, tileSize);
 	return currentAnimationFrame;
     }
      
@@ -311,7 +317,7 @@ public class SpriteWindow {
         started = true;
         running = true;
 	if (currentAnimationFrame != null) {
-	    display.showFrame(currentAnimationFrame);
+	    display.setInitialFrame(currentAnimationFrame);
 	}
         display.start();
         startTime = System.currentTimeMillis();
@@ -326,13 +332,15 @@ public class SpriteWindow {
      */
     public void stop() {
         checkStarted(true);
-        synchronized(display) {
+	boolean wasRunning;
+        synchronized(LOCK) {
+	    wasRunning = running;
             if (running) {
                 running = false;
-                display.closeFrame();
             }
-            display.notifyAll();
+            LOCK.notifyAll();
         }
+	display.closeFrame();
     }
 
     /**
@@ -341,12 +349,19 @@ public class SpriteWindow {
      * if the animation is too slow.  This can also happen if the program
      * is suspended for a time, e.g. for debugging.  It is therefore 
      * recommended that all time-based events in an animation be based off 
-     * the time value returned by this  method, rather than e.g.
+     * the time value returned by this method, rather than e.g.
      * System.currentTimeMillis().
+     * <p>
+     * If the system can't keep up with the frame rate, it will drop up
+     * to four frames.  Past that limit, it will print a diagnostic
+     * message to stdout, and "pause" the animation (that is, it will
+     * not advance getTimeSinceStart() even though the wall clock time
+     * indicates that it "should").
      *
      * @return  The total elapsed time, adjusted for pauses, in milliseconds.
      *
      * @see #pauseAnimation(int)
+     * @see #setSilent(boolean)
      * @see System#currentTimeMillis()
      */
     public double getTimeSinceStart() {
@@ -364,13 +379,13 @@ public class SpriteWindow {
      * @see AnimationFrame#addTile(int, int, Tile)
      */
     public AnimationFrame waitForNextFrame() {
-        synchronized(display) {
+        synchronized(LOCK) {
             currFrame++;
         }
         boolean excused = false;
         for (;;) {
             Runnable event = null;
-            synchronized(display) {
+            synchronized(LOCK) {
                 if (!running) {
                     return null;
                 } else if (!eventQueue.isEmpty()) {
@@ -380,7 +395,7 @@ public class SpriteWindow {
 		} else if (!opened) {
 		    assert currFrame == 0;
 		    try {
-			display.wait();
+			LOCK.wait();
 		    } catch (InterruptedException ex) {
 			stop();
 			Thread.currentThread().interrupt();
@@ -393,23 +408,29 @@ public class SpriteWindow {
                     long nextTime = startTime + (long) timeSinceStart;
                     long now = System.currentTimeMillis();
                     long waitTime = nextTime - now;
-                    if (waitTime < -frameMS) {
+                    if (waitTime < -4 * frameMS 
+		        || (excused && waitTime < -frameMS))
+		    {
+			// Don't drop more than 4 frames
                         if (excused) {
                             excused = false;
                         } else if (!silent) {
                             System.out.println(
-                                "NOTE:  Animation fell behind by " +
+                                "NOTE (Spritely):  Animation fell behind by " +
 				(long) Math.ceil(-frameMS - waitTime) + 
-				" ms on frame " + currFrame +
-				".  Animation clock reset.");
+				" ms on frame " + currFrame + ".");
+			    System.out.println(
+				"                  Animation clock reset.");
                         }
                         startTime = now - (long) timeSinceStart;
                         break;
+                    } else if (waitTime < -frameMS) {
+			currFrame++;	// Drop a frame
                     } else if (waitTime <= 0) {
                         break;
                     } else {
                         try {
-                            display.wait(waitTime);
+                            LOCK.wait(waitTime);
                         } catch (InterruptedException ex) {
                             stop();
                             Thread.currentThread().interrupt();
@@ -422,8 +443,7 @@ public class SpriteWindow {
                 event.run();
             }
         }
-        currentAnimationFrame = 
-            new AnimationFrame(gridSize, tileSize, currentAnimationFrame);
+        currentAnimationFrame = new AnimationFrame(gridSize, tileSize);
         return currentAnimationFrame;
     }
 
@@ -447,25 +467,50 @@ public class SpriteWindow {
     /**
      * Pause the animation for the given time, and reset the animation
      * clock.  Pausing the program might be useful for  debugging.  This
-     * is particularly ture in text mode, since the screen's cursor is 
+     * is particularly true in text mode, since the screen's cursor is 
      * constantly being sent to the home position, which tends to
      * scramble debut output.
+     * <p>
+     * Return immediately if the animation stops, e.g. because the
+     * window is closed.
      *
      * @param pauseMS   The number of milliseconds to pause
+     * 
+     * @throws IllegalStateException  if we haven't been started
      */
      public void pauseAnimation(int pauseMS) {
-        try {
-            Thread.currentThread().sleep(pauseMS);
-        } catch (InterruptedException ex) {
-            stop();
-            Thread.currentThread().interrupt();
+        if (display == null) {
+            throw new IllegalStateException();
         }
-        //
-        // Reset the animation clock:
-        //
-        double frameMS = 1000 / fps;
-        double timeSinceStart = getTimeSinceStart();
-        long now = System.currentTimeMillis();
-        startTime = now - (long) (timeSinceStart + frameMS);
-     }
+	if (pauseMS <= 0) {
+	    return;
+	}
+	long timeWanted = System.currentTimeMillis() + pauseMS;
+	synchronized(LOCK) {
+	    for (;;) {
+		if (!running) {
+		    return;
+		}
+		long now = System.currentTimeMillis();
+		long toWait = timeWanted - now;
+		if (toWait <= 0L) {
+		    break;
+		}
+		try {
+		    LOCK.wait(toWait);
+		} catch (InterruptedException ex) {
+		    stop();
+		    Thread.currentThread().interrupt();
+		    return;
+		}
+	    }
+	    //
+	    // Reset the animation clock:
+	    //
+	    double frameMS = 1000 / fps;
+	    double timeSinceStart = getTimeSinceStart();
+	    long now = System.currentTimeMillis();
+	    startTime = now - (long) (timeSinceStart + frameMS);
+	}
+    }
 }

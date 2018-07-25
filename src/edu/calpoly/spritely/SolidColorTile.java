@@ -28,7 +28,7 @@ import java.awt.Color;
 
 /**
  * A tile that is represented graphically as a solid color.  The color
- * may be semi-transparent.
+ * may be semi-transparent.  SolidColorTile instance are immutable.
  *
  *      @author         Bill Foote, http://jovial.com
  */

@@ -21,9 +21,11 @@
  */
 package edu.calpoly.spritely;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -41,22 +43,22 @@ import java.util.ArrayList;
 public final class AnimationFrame {
 
     private final Object grid[][];     // Really array of List<Tile>.  Sigh.
+    private final Size gridSize;
     private final Size tileSize;
     private boolean shown = false;
-    AnimationFrame lastFrame;
 
-    AnimationFrame(Size gridSize, Size tileSize, AnimationFrame lastFrame) {
+    AnimationFrame(Size gridSize, Size tileSize) {
         grid = new Object[gridSize.height][gridSize.width];
         for (int y = 0; y < grid.length; y++) {
             for (int x = 0; x < grid[y].length; x++) {
                 grid[y][x] = new ArrayList<Tile>(4);
+		// An underlying array of 4 is small enough to be
+		// negligible, and hopefully large enough for a pretty
+		// typical case of up to 4 overlapping tiles.
             }
         }
         this.tileSize = tileSize;
-	this.lastFrame = lastFrame;
-	if (lastFrame != null) {
-	    lastFrame.lastFrame = null;
-	}
+	this.gridSize = gridSize;
     }
 
     /**
@@ -91,12 +93,18 @@ public final class AnimationFrame {
         cell.add(tile);
     }
 
-    void setRepaintArea(SpriteCanvas canvas) {
+    Rectangle calculateDamage(AnimationFrame lastFrame) {
+	Rectangle damage = new Rectangle(0, 0, -1, -1);
 	assert !shown;
         shown = true;
 	if (lastFrame == null) {
-	    canvas.repaint();
-	    return;
+	    damage.add(0, 0);
+	    damage.add(gridSize.width, gridSize.height);
+	    // java.awt.Rectangle is a little counter-intuitive, in that
+	    // damage.contains(w, h) would return false at this point:
+	    assert damage.width == gridSize.width;
+	    assert damage.height == gridSize.height;
+	    return damage;
 	}
 	int minX = Integer.MAX_VALUE;
 	int maxX = Integer.MIN_VALUE;
@@ -104,48 +112,49 @@ public final class AnimationFrame {
 	int maxY = Integer.MIN_VALUE;
         for (int y = 0; y < grid.length; y++) {
             for (int x = 0; x < grid[y].length; x++) {
-                @SuppressWarnings("unchecked")
-                List<Tile> cell = (List<Tile>) grid[y][x];
-                @SuppressWarnings("unchecked")
-                List<Tile> old = (List<Tile>) lastFrame.grid[y][x];
-		if (!(cell.equals(old))) {	// cf. Tile class documentation
-		    minX = Math.min(minX, x);
-		    maxX = Math.max(maxX, x);
-		    minY = Math.min(minY, y);
-		    maxY = Math.max(maxY, y);
+		if (x < minX || x > maxX || y < minY || y > maxY) {
+		    @SuppressWarnings("unchecked")
+		    List<Tile> cell = (List<Tile>) grid[y][x];
+		    @SuppressWarnings("unchecked")
+		    List<Tile> old = (List<Tile>) lastFrame.grid[y][x];
+		    if (!(cell.equals(old))) {	// cf. Tile class documentation
+			minX = Math.min(x, minX);
+			maxX = Math.max(x, maxX);
+			minY = Math.min(y, minY);
+			maxY = Math.max(y, maxY);
+			x = maxX;
+		    }
 		}
 	    }
 	}
-	if (minX != Integer.MAX_VALUE) {
-	    double scale = canvas.getScale();
-	    int width = 1 + maxX - minX;
-	    int height = 1 + maxY - minY;
-	    if (scale == 1.0) {
-		canvas.repaint(minX * tileSize.width,
-			       minY * tileSize.height,
-			       width * tileSize.width,
-			       height * tileSize.height);
-	    } else {
-		double x = scale * minX * tileSize.width;
-		double y = scale * minY * tileSize.height;
-		double dw = scale * width * tileSize.width;
-		double dh = scale * height * tileSize.height;
-		int ix = (int) x;
-		dw += x - ix;
-		int iy = (int) y;
-		dh += y - iy;
-		canvas.repaint(ix, iy, (int) Math.ceil(dw), 
-			       (int) Math.ceil(dh));
-	    }
-
+	if (minX != Integer.MAX_VALUE) {	// Something added
+	    damage.add(minX, minY);
+	    damage.add(maxX + 1, maxY + 1);
 	}
-	lastFrame = null;
+	return damage;
     }
 
-    void paint(Graphics2D g) {
+    void paint(BufferedImage buffer, BufferedImage last, Rectangle damage) {
 	assert shown;
-        for (int y = 0; y < grid.length; y++) {
-            for (int x = 0; x < grid[y].length; x++) {
+	Graphics2D g = buffer.createGraphics();
+	g.setColor(Color.black);
+	if (damage.contains(0, 0) 
+	     && damage.contains(gridSize.width-1, gridSize.height-1))
+	{
+	    g.fillRect(0, 0, tileSize.width*gridSize.width, 
+			     tileSize.height*gridSize.height);
+	} else {
+	    assert last != null;
+	    // Blitting one big image is faster than blitting a bunch of
+	    // small images:
+	    g.drawImage(last, 0, 0, null);
+	    g.fillRect(damage.x * tileSize.width,
+	               damage.y * tileSize.height,
+		       damage.width * tileSize.width,
+		       damage.height * tileSize.height);
+	}
+        for (int y = damage.y; y < damage.y + damage.height; y++) {
+            for (int x = damage.x; x < damage.x + damage.width; x++) {
                 @SuppressWarnings("unchecked")
                 List<Tile> cell = (List<Tile>) grid[y][x];
                 if (!cell.isEmpty()) {
@@ -155,9 +164,11 @@ public final class AnimationFrame {
                     for (Tile t : cell) {
                         t.paint(g2, tileSize);
                     }
+		    g2.dispose();
                 }
             }
         }
+	g.dispose();
     }
 
     void print() {
