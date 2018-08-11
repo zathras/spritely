@@ -30,16 +30,25 @@ public class Main {
 
     private void keyTyped(char ch) {
         System.out.println("Key typed:  " + ch + "    ");
-        if (ch == (char) 4) {
+        if (ch == (char) 4 || ch == 'q') {
             System.out.println();
-            System.out.println("^D entered; quitting program.    ");
+            System.out.println("Quitting program.    ");
             System.out.println();
             System.exit(0);
         } else if (ch == 'p') {
             System.out.println("Pausing animation for 5 seconds...    ");
             window.pauseAnimation(5000);
             System.out.println("Pause done.    ");
-        }
+        } else if (ch == 'r') {
+	    System.out.println("Testing reset of animation clock...");
+	    try {
+		Thread.sleep(5000);
+	    } catch (InterruptedException ex) {
+		Thread.currentThread().interrupt();
+	    }
+	    window.pauseAnimation(0);
+	    System.out.println("Resuming.");
+	}
     }
 
     public void run() throws IOException {

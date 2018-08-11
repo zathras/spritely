@@ -68,6 +68,12 @@ import java.util.LinkedList;
  * want multiple frames, you can run each frame from its own thread, or you
  * can arrange to call showNextFrame on the multiple frame objects, one
  * after the other, from the same thread.
+ * <p>
+ * This framework can also be used when animation isn't continuous, e.g.
+ * in turn-based games.  In this case, fps gives a maximum number of
+ * frames/second, which might be useful for periods when there is no
+ * user input.  In this case, calling <code>pauseAnimation(0)</code>
+ * before <code>waitForNextFrame()</code> will reset the animation clock.
  *
  *      @author         Bill Foote, http://jovial.com
  */
@@ -408,6 +414,7 @@ public class SpriteWindow {
                     long nextTime = startTime + (long) timeSinceStart;
                     long now = System.currentTimeMillis();
                     long waitTime = nextTime - now;
+		    System.out.println("@@ wait time " + waitTime);
                     if (waitTime < -4 * frameMS 
 		        || (excused && waitTime < -frameMS))
 		    {
@@ -466,15 +473,25 @@ public class SpriteWindow {
 
     /**
      * Pause the animation for the given time, and reset the animation
-     * clock.  Pausing the program might be useful for  debugging.  This
+     * clock.  Resetting the animation animation clock makes the framework's
+     * idea of when the animation started agree with the current frame number.
+     * This avoids having the framework skip frames or print out a warning
+     * message if a frame has to wait for something lengthy, like user
+     * input.  After the long delay, a call to <code>pauseAnimation(0)</code>
+     * will reset the animation clock.
+     * <p>
+     * Pausing the program might also be useful for  debugging.  This
      * is particularly true in text mode, since the screen's cursor is 
      * constantly being sent to the home position, which tends to
      * scramble debut output.
      * <p>
-     * Return immediately if the animation stops, e.g. because the
+     * Returns immediately if the animation stops, e.g. because the
      * window is closed.
      *
-     * @param pauseMS   The number of milliseconds to pause
+     * @param pauseMS   The number of milliseconds to pause.  A value
+     *			of 0 potentially resets the animation clock, 
+     *			with no pause.  A value less than zero causes
+     *			an immediate return, with no effect.
      * 
      * @throws IllegalStateException  if we haven't been started
      */
@@ -482,7 +499,7 @@ public class SpriteWindow {
         if (display == null) {
             throw new IllegalStateException();
         }
-	if (pauseMS <= 0) {
+	if (pauseMS < 0) {
 	    return;
 	}
 	long timeWanted = System.currentTimeMillis() + pauseMS;
@@ -507,10 +524,11 @@ public class SpriteWindow {
 	    //
 	    // Reset the animation clock:
 	    //
-	    double frameMS = 1000 / fps;
 	    double timeSinceStart = getTimeSinceStart();
-	    long now = System.currentTimeMillis();
-	    startTime = now - (long) (timeSinceStart + frameMS);
+	    long newStart = System.currentTimeMillis() - (long) timeSinceStart;
+	    if (newStart > startTime) {
+		startTime = newStart;
+	    }
 	}
     }
 }
