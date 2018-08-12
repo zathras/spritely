@@ -60,8 +60,10 @@
  *     and it simulates these events in text mode.
  * </ul>
  * The main entry point for this package is the class 
- * <a href="SpriteWindow.html"><code>SpriteWindow</code></a>.
- * Here's an illustration of the main classes:
+ * <a href="SpriteWindow.html"><code>SpriteWindow</code></a>.  For
+ * non-tile-based drawing, the alernate entry point
+ * <a href="GraphicsWindw.html"><code>GraphicsWindow</code></a> is
+ * available. Here's an illustration of the main classes:
  * <p>
  * <img src="doc-files/uml.svg" width="100%" alt="*">
  * <p>
@@ -72,6 +74,9 @@
  * which the program fills with tiles.  When it's done, it calls
  * <code>showNextFrame()</code> on the <code>SpriteWindow</code> to
  * display it.
+ * <p>
+ * Some implementation notes are available
+ * <a href="doc-files/implementation-notes.html">here</a>.
  * <p>
  * See also 
  * <a href="https://spritely.jovial.com/" target="_top">https://spritely.jovial.com/</a>,

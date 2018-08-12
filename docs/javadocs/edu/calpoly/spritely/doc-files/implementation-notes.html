@@ -1,0 +1,25 @@
+<html>
+<body>
+<p>
+The internal class names can get a little confusing.  Generally:
+<ul>
+<li>A "Window" is the public-facing class that provides animation.
+    Internally, it acts as a controller for some kind of display.
+<li>A "Display" is the physical resource that shows the animation, and
+    is internal.  There are three kinds of display:
+    <ul>
+    <li><code>SpriteScreen</code> shows a tile-based sprite animation in
+        text mode.
+    <li><code>SpriteCanvas</code> shows a tile-based sprite animation in
+	graphics mode.
+    <li><code>GraphicsCanvas</code> shows general graphics-based
+        animation (not limited to tiles).  It goes with GraphicsWindow.
+    </ul>
+</lu>
+<p>
+This is illustrated in the following diagram:
+<p>
+<img src="implementation.svg" width="100%" alt="*">
+</p>
+</body>
+</html>

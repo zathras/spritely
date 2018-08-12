@@ -30,7 +30,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Representation of one frame of animation.  An AnimationFrame is
+ * Representation of one frame of animation in a SpriteWindow.  
+ * An AnimationFrame is
  * given to client code by a SpriteWindow for each frame of animation.
  * The client works by adding tiles to a grid maintained by the
  * AnimationFrame.

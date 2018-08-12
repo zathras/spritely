@@ -99,7 +99,9 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
+	(new Thread(new TestGraphics())).start();
         (new Main()).run();
+	// (new TestGraphics()).run();
         System.exit(0);
     }
 }
