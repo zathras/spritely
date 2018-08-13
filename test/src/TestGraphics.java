@@ -14,7 +14,7 @@ import edu.calpoly.spritely.Size;
 
 public class TestGraphics implements Runnable {
 
-    private final Size canvasSize= new Size(640, 480);
+    private final Size canvasSize= new Size(800, 600);
     private final GraphicsWindow window 
         = new GraphicsWindow("Kimmy Discovers Graphics!", canvasSize);
     private BufferedImage toaster;
@@ -22,6 +22,9 @@ public class TestGraphics implements Runnable {
     private void mouseClicked(int x, int y) {
         System.out.println("Mouse clicked:  x=" + x + ", y=" + y + "    ");
     }
+
+    private int lastX = Integer.MIN_VALUE;
+    private int lastY = Integer.MIN_VALUE;
 
     private void keyTyped(char ch) {
         System.out.println("Key typed:  " + ch + "    ");
@@ -77,13 +80,25 @@ public class TestGraphics implements Runnable {
 
     void paintOrbit(Graphics2D g, double theta) {
 	g.setColor(Color.black);
-	g.fillRect(0, 0, canvasSize.width, canvasSize.height);
-	g.setColor(Color.yellow);
-	g.fillOval(canvasSize.width/2 - 20, canvasSize.height/2 - 20, 40, 40);
+	if (Math.IEEEremainder(theta, 2 * Math.PI) > 0) {
+	    g.fillRect(0, 0, canvasSize.width, canvasSize.height);
+	    g.setColor(Color.yellow);
+	    g.fillOval(canvasSize.width/2-20, canvasSize.height/2-20, 40, 40);
+	} else {
+	    // Test the other mode where we start with the contents of the
+	    // last frame
+	    window.paintLastFrameTo(g);
+	    // Erase the last toaster.  This only works because the image
+	    // never overlaps with the sun.
+	    g.fillRect(lastX, lastY, 
+	    	       toaster.getWidth(null), toaster.getHeight(null));
+	}
 	double centerX = (canvasSize.width - toaster.getWidth(null)) / 2.0;
 	double centerY = (canvasSize.height- toaster.getHeight(null)) / 2.0;
-	int x = (int) Math.round(centerX +  200.0 * Math.cos(theta));
-	int y = (int) Math.round(centerY + 200.0 * Math.sin(theta));
+	int x = (int) Math.round(centerX +  250.0 * Math.cos(theta));
+	int y = (int) Math.round(centerY + 250.0 * Math.sin(theta));
 	g.drawImage(toaster, x, y, null);
+	lastX = x;
+	lastY = y;
     }
 }
