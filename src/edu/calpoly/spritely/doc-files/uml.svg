@@ -49,7 +49,7 @@
         <path d="M0 0 L0 75 L180 75 L180 0 Z"/>
       </clipPath>
       <clipPath clipPathUnits="userSpaceOnUse" id="clipPath16">
-        <path d="M562 154 L562 303 L816 303 L816 154 Z"/>
+        <path d="M562 154 L562 291 L816 291 L816 154 Z"/>
       </clipPath>
       <clipPath clipPathUnits="userSpaceOnUse" id="clipPath17">
         <path d="M0 0 L0 75 L210 75 L210 0 Z"/>
@@ -63,10 +63,10 @@
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="108" width="254.25" height="165" y="127" clip-path="url(#clipPath2)"/>
-      <text x="188.073" font-size="13px" y="144.3525" clip-path="url(#clipPath3)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">SpriteWindow</text>
+      <text x="189.2695" font-size="13px" y="144.5684" clip-path="url(#clipPath3)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">SpriteWindow</text>
       <line stroke-linecap="square" clip-path="url(#clipPath3)" fill="none" x1="109" x2="361" y1="152" y2="152" stroke-miterlimit="10"/>
-      <text x="113" xml:space="preserve" y="168.5288" clip-path="url(#clipPath3)" font-family="sans-serif" stroke="none">-gridSize : Size</text>
-      <text x="113" xml:space="preserve" y="182.4917" clip-path="url(#clipPath3)" font-family="sans-serif" stroke="none">-tileSize : Size</text>
+      <text x="113" xml:space="preserve" y="168.9121" clip-path="url(#clipPath3)" font-family="sans-serif" stroke="none">-gridSize : Size</text>
+      <text x="113" xml:space="preserve" y="183.0449" clip-path="url(#clipPath3)" font-family="sans-serif" stroke="none">-tileSize : Size</text>
       <line stroke-linecap="square" clip-path="url(#clipPath3)" fill="none" x1="109" x2="361" y1="190" y2="190" stroke-miterlimit="10"/>
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(113,195)" stroke-linecap="butt">
@@ -89,24 +89,24 @@
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="140" width="190.25" height="75" y="389.5" clip-path="url(#clipPath2)"/>
-      <text x="178.2881" font-size="13px" y="406.8525" clip-path="url(#clipPath5)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">AnimationFrame</text>
+      <text x="180.0432" font-size="13px" y="407.0684" clip-path="url(#clipPath5)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">AnimationFrame</text>
       <line stroke-linecap="square" clip-path="url(#clipPath5)" fill="none" x1="141" x2="329" y1="414" y2="414" stroke-miterlimit="10"/>
-      <text x="145" xml:space="preserve" y="431.0288" clip-path="url(#clipPath5)" font-family="sans-serif" stroke="none">-grid : List&lt;Tile&gt;[][]</text>
+      <text x="145" xml:space="preserve" y="431.4121" clip-path="url(#clipPath5)" font-family="sans-serif" stroke="none">-grid : List&lt;Tile&gt;[][]</text>
       <line stroke-linecap="square" clip-path="url(#clipPath5)" fill="none" x1="141" x2="329" y1="438" y2="438" stroke-miterlimit="10"/>
-      <text x="145" xml:space="preserve" y="454.9917" clip-path="url(#clipPath5)" font-family="sans-serif" stroke="none">+addTile(int x, int y, Tile tile)</text>
+      <text x="145" xml:space="preserve" y="455.5449" clip-path="url(#clipPath5)" font-family="sans-serif" stroke="none">+addTile(int x, int y, Tile tile)</text>
     </g>
     <g fill="rgb(255,255,204)" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke="rgb(255,255,204)">
       <rect x="431" width="190.25" height="119" y="384.5" clip-path="url(#clipPath2)" stroke="none"/>
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="431" width="190.25" height="119" y="384.5" clip-path="url(#clipPath2)"/>
-      <text x="481.6113" xml:space="preserve" y="400.9023" clip-path="url(#clipPath6)" font-family="sans-serif" stroke="none">&lt;&lt;interface&gt;&gt;</text>
-      <text x="513.2012" font-size="13px" y="424.8154" clip-path="url(#clipPath6)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">Tile</text>
+      <text x="481.6113" xml:space="preserve" y="401.1016" clip-path="url(#clipPath6)" font-family="sans-serif" stroke="none">&lt;&lt;interface&gt;&gt;</text>
+      <text x="513.6042" font-size="13px" y="425.2012" clip-path="url(#clipPath6)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">Tile</text>
       <line stroke-linecap="square" clip-path="url(#clipPath6)" fill="none" x1="432" x2="620" y1="432" y2="432" stroke-miterlimit="10"/>
-      <text x="436" xml:space="preserve" y="448.9917" clip-path="url(#clipPath6)" font-family="sans-serif" stroke="none"> </text>
-      <line stroke-linecap="square" clip-path="url(#clipPath6)" fill="none" x1="432" x2="620" y1="456" y2="456" stroke-miterlimit="10"/>
+      <text x="436" xml:space="preserve" y="449.5449" clip-path="url(#clipPath6)" font-family="sans-serif" stroke="none"> </text>
+      <line stroke-linecap="square" clip-path="url(#clipPath6)" fill="none" x1="432" x2="620" y1="457" y2="457" stroke-miterlimit="10"/>
     </g>
-    <g stroke-linecap="butt" transform="matrix(1,0,0,1,-93,129) translate(436,461)" text-rendering="geometricPrecision" font-family="sans-serif" shape-rendering="geometricPrecision" font-style="italic" stroke-miterlimit="1.45">
+    <g stroke-linecap="butt" transform="matrix(1,0,0,1,-93,129) translate(436,462)" text-rendering="geometricPrecision" font-family="sans-serif" shape-rendering="geometricPrecision" font-style="italic" stroke-miterlimit="1.45">
       <text x="0" xml:space="preserve" y="12" clip-path="url(#clipPath7)" stroke="none">+paint(Graphics2D g, Size s)  </text>
       <text x="175" xml:space="preserve" y="12" clip-path="url(#clipPath7)" stroke="none"> </text>
       <text x="0" xml:space="preserve" y="27" clip-path="url(#clipPath7)" stroke="none">+getText() : char</text>
@@ -116,13 +116,13 @@
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="325.125" width="184" height="108" y="556.5" clip-path="url(#clipPath2)"/>
-      <text x="383.2031" font-size="13px" y="573.8525" clip-path="url(#clipPath8)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">ImageTile</text>
+      <text x="384.2283" font-size="13px" y="574.0684" clip-path="url(#clipPath8)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">ImageTile</text>
       <line stroke-linecap="square" clip-path="url(#clipPath8)" fill="none" x1="326" x2="508" y1="581" y2="581" stroke-miterlimit="10"/>
-      <text x="330.125" xml:space="preserve" y="598.0288" clip-path="url(#clipPath8)" font-family="sans-serif" stroke="none">-image : Image</text>
-      <text x="330.125" xml:space="preserve" y="611.9917" clip-path="url(#clipPath8)" font-family="sans-serif" stroke="none">-text : char</text>
-      <line stroke-linecap="square" clip-path="url(#clipPath8)" fill="none" x1="326" x2="508" y1="619" y2="619" stroke-miterlimit="10"/>
+      <text x="330.125" xml:space="preserve" y="598.4121" clip-path="url(#clipPath8)" font-family="sans-serif" stroke="none">-image : Image</text>
+      <text x="330.125" xml:space="preserve" y="612.5449" clip-path="url(#clipPath8)" font-family="sans-serif" stroke="none">-text : char</text>
+      <line stroke-linecap="square" clip-path="url(#clipPath8)" fill="none" x1="326" x2="508" y1="620" y2="620" stroke-miterlimit="10"/>
     </g>
-    <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(330,624)" stroke-linecap="butt">
+    <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(330,625)" stroke-linecap="butt">
       <text x="0" xml:space="preserve" y="12" clip-path="url(#clipPath7)" stroke="none">+paint(Graphics2D g, Size s)  </text>
       <text x="175" xml:space="preserve" y="12" clip-path="url(#clipPath7)" stroke="none"> </text>
       <text x="0" xml:space="preserve" y="27" clip-path="url(#clipPath7)" stroke="none">+getText() : char</text>
@@ -132,13 +132,13 @@
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="546.125" width="190.25" height="108" y="556.5" clip-path="url(#clipPath2)"/>
-      <text x="592.3762" font-size="13px" y="573.8525" clip-path="url(#clipPath9)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">SolidColorTile</text>
+      <text x="594.3281" font-size="13px" y="574.0684" clip-path="url(#clipPath9)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">SolidColorTile</text>
       <line stroke-linecap="square" clip-path="url(#clipPath9)" fill="none" x1="547" x2="735" y1="581" y2="581" stroke-miterlimit="10"/>
-      <text x="551.125" xml:space="preserve" y="598.0288" clip-path="url(#clipPath9)" font-family="sans-serif" stroke="none">-color : Color</text>
-      <text x="551.125" xml:space="preserve" y="611.9917" clip-path="url(#clipPath9)" font-family="sans-serif" stroke="none">-text : char</text>
-      <line stroke-linecap="square" clip-path="url(#clipPath9)" fill="none" x1="547" x2="735" y1="619" y2="619" stroke-miterlimit="10"/>
+      <text x="551.125" xml:space="preserve" y="598.4121" clip-path="url(#clipPath9)" font-family="sans-serif" stroke="none">-color : Color</text>
+      <text x="551.125" xml:space="preserve" y="612.5449" clip-path="url(#clipPath9)" font-family="sans-serif" stroke="none">-text : char</text>
+      <line stroke-linecap="square" clip-path="url(#clipPath9)" fill="none" x1="547" x2="735" y1="620" y2="620" stroke-miterlimit="10"/>
     </g>
-    <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(551,624)" stroke-linecap="butt">
+    <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(551,625)" stroke-linecap="butt">
       <text x="0" xml:space="preserve" y="12" clip-path="url(#clipPath7)" stroke="none">+paint(Graphics2D g, Size s)  </text>
       <text x="175" xml:space="preserve" y="12" clip-path="url(#clipPath7)" stroke="none"> </text>
       <text x="0" xml:space="preserve" y="27" clip-path="url(#clipPath7)" stroke="none">+getText() : char</text>
@@ -148,8 +148,8 @@
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="734.125" width="148" height="90" y="-98.5" clip-path="url(#clipPath2)"/>
-      <text x="732.5508" xml:space="preserve" y="-82.0977" clip-path="url(#clipPath10)" font-family="sans-serif" stroke="none">&lt;&lt;functional interface&gt;&gt;</text>
-      <text x="747.5239" font-size="13px" y="-58.1846" clip-path="url(#clipPath10)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">KeyTypedHandler</text>
+      <text x="732.5508" xml:space="preserve" y="-81.8984" clip-path="url(#clipPath10)" font-family="sans-serif" stroke="none">&lt;&lt;functional interface&gt;&gt;</text>
+      <text x="748.8696" font-size="13px" y="-57.7988" clip-path="url(#clipPath10)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">KeyTypedHandler</text>
       <line stroke-linecap="square" clip-path="url(#clipPath10)" fill="none" x1="735" x2="881" y1="-50" y2="-50" stroke-miterlimit="10"/>
       <line stroke-linecap="square" clip-path="url(#clipPath10)" fill="none" x1="735" x2="881" y1="-40" y2="-40" stroke-miterlimit="10"/>
     </g>
@@ -161,8 +161,8 @@
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="729" width="174" height="83" y="16.5" clip-path="url(#clipPath2)"/>
-      <text x="740.4258" xml:space="preserve" y="32.9023" clip-path="url(#clipPath12)" font-family="sans-serif" stroke="none">&lt;&lt;functional interface&gt;&gt;</text>
-      <text x="740.8787" font-size="13px" y="56.8154" clip-path="url(#clipPath12)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">MouseClickedHandler</text>
+      <text x="740.4258" xml:space="preserve" y="33.1016" clip-path="url(#clipPath12)" font-family="sans-serif" stroke="none">&lt;&lt;functional interface&gt;&gt;</text>
+      <text x="743.3035" font-size="13px" y="57.2012" clip-path="url(#clipPath12)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">MouseClickedHandler</text>
       <line stroke-linecap="square" clip-path="url(#clipPath12)" fill="none" x1="730" x2="902" y1="64" y2="64" stroke-miterlimit="10"/>
       <line stroke-linecap="square" clip-path="url(#clipPath12)" fill="none" x1="730" x2="902" y1="74" y2="74" stroke-miterlimit="10"/>
     </g>
@@ -174,10 +174,10 @@
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <rect fill="none" x="367" width="208.25" height="165" y="-114" clip-path="url(#clipPath2)"/>
-      <text x="428.5684" xml:space="preserve" y="-97.5977" clip-path="url(#clipPath14)" font-family="sans-serif" stroke="none">&lt;&lt;abstract&gt;&gt;</text>
-      <text x="408.7878" font-size="13px" y="-73.6846" clip-path="url(#clipPath14)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">AnimationWindow</text>
+      <text x="428.5684" xml:space="preserve" y="-97.3984" clip-path="url(#clipPath14)" font-family="sans-serif" stroke="none">&lt;&lt;abstract&gt;&gt;</text>
+      <text x="410.3398" font-size="13px" y="-73.2988" clip-path="url(#clipPath14)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">AnimationWindow</text>
       <line stroke-linecap="square" clip-path="url(#clipPath14)" fill="none" x1="368" x2="574" y1="-65" y2="-65" stroke-miterlimit="10"/>
-      <text x="372" xml:space="preserve" y="-49.5083" clip-path="url(#clipPath14)" font-family="sans-serif" stroke="none"> </text>
+      <text x="372" xml:space="preserve" y="-48.9551" clip-path="url(#clipPath14)" font-family="sans-serif" stroke="none"> </text>
       <line stroke-linecap="square" clip-path="url(#clipPath14)" fill="none" x1="368" x2="574" y1="-41" y2="-41" stroke-miterlimit="10"/>
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(372,-36)" stroke-linecap="butt">
@@ -193,17 +193,16 @@
       <text x="43" xml:space="preserve" y="72" clip-path="url(#clipPath15)" stroke="none"> </text>
     </g>
     <g fill="rgb(255,255,204)" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke="rgb(255,255,204)">
-      <rect x="562" width="254.25" height="149.5" y="154.5" clip-path="url(#clipPath2)" stroke="none"/>
+      <rect x="562" width="254.25" height="137.5" y="154.5" clip-path="url(#clipPath2)" stroke="none"/>
     </g>
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
-      <rect fill="none" x="562" width="254.25" height="149.5" y="154.5" clip-path="url(#clipPath2)"/>
-      <text x="631.9453" font-size="13px" y="171.8525" clip-path="url(#clipPath16)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">GraphicsWindow</text>
+      <rect fill="none" x="562" width="254.25" height="137.5" y="154.5" clip-path="url(#clipPath2)"/>
+      <text x="633.3545" font-size="13px" y="172.0684" clip-path="url(#clipPath16)" font-family="sans-serif" stroke="none" font-weight="bold" xml:space="preserve">GraphicsWindow</text>
       <line stroke-linecap="square" clip-path="url(#clipPath16)" fill="none" x1="563" x2="815" y1="179" y2="179" stroke-miterlimit="10"/>
-      <text x="567" xml:space="preserve" y="196.0288" clip-path="url(#clipPath16)" font-family="sans-serif" stroke="none">-gridSize : Size</text>
-      <text x="567" xml:space="preserve" y="209.9917" clip-path="url(#clipPath16)" font-family="sans-serif" stroke="none">-tileSize : Size</text>
-      <line stroke-linecap="square" clip-path="url(#clipPath16)" fill="none" x1="563" x2="815" y1="217" y2="217" stroke-miterlimit="10"/>
+      <text x="567" xml:space="preserve" y="196.4121" clip-path="url(#clipPath16)" font-family="sans-serif" stroke="none">-canvasSize : Size</text>
+      <line stroke-linecap="square" clip-path="url(#clipPath16)" fill="none" x1="563" x2="815" y1="203" y2="203" stroke-miterlimit="10"/>
     </g>
-    <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(567,222)" stroke-linecap="butt">
+    <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" font-family="sans-serif" transform="matrix(1,0,0,1,-93,129) translate(567,208)" stroke-linecap="butt">
       <text x="0" xml:space="preserve" y="12" clip-path="url(#clipPath17)" stroke="none">+getCanvasSize() : Size</text>
       <text x="135" xml:space="preserve" y="12" clip-path="url(#clipPath17)" stroke="none"> </text>
       <text x="0" xml:space="preserve" y="27" clip-path="url(#clipPath17)" stroke="none">+getInitialFrame() : Graphics2D</text>
@@ -218,12 +217,12 @@
     <g text-rendering="geometricPrecision" stroke-miterlimit="1.45" shape-rendering="geometricPrecision" transform="matrix(1,0,0,1,-93,129)" stroke-linecap="butt">
       <path fill="none" d="M235.125 291.9765 L235.125 381.5191" clip-path="url(#clipPath2)"/>
       <path d="M235.125 389.5191 L240.125 377.5191 L235.125 380.5191 L230.125 377.5191 Z" clip-path="url(#clipPath2)" stroke="none"/>
-      <text x="178.9277" xml:space="preserve" y="345.1709" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">creates ↓</text>
+      <text x="178.5264" xml:space="preserve" y="345.2852" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">creates ↓</text>
       <path fill="none" d="M330.2761 427 L422.9922 427" clip-path="url(#clipPath2)"/>
       <path d="M430.9922 427 L418.9922 422 L421.9922 427 L418.9922 432 Z" clip-path="url(#clipPath2)" stroke="none"/>
-      <text x="349.5732" xml:space="preserve" y="417.458" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">displays →</text>
-      <text x="378.7266" xml:space="preserve" y="431.4209" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
-      <text x="376.8281" xml:space="preserve" y="445.3838" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">  </text>
+      <text x="349.1396" xml:space="preserve" y="417.4023" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">displays →</text>
+      <text x="378.7266" xml:space="preserve" y="431.5352" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
+      <text x="376.8281" xml:space="preserve" y="445.668" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">  </text>
       <path fill="none" stroke-dasharray="6,2" d="M417.125 556.5059 L417.125 534.5 L526.125 534.5 L526.125 518.5232" clip-path="url(#clipPath2)"/>
       <path fill="white" stroke-dasharray="6,2" d="M526.125 503.5232 L520.125 519.5232 L532.125 519.5232 Z" clip-path="url(#clipPath2)" stroke="none"/>
       <path fill="none" d="M526.125 503.5232 L520.125 519.5232 L532.125 519.5232 Z" clip-path="url(#clipPath2)"/>
@@ -235,14 +234,14 @@
       <path fill="none" d="M471.125 51.0114 L465.125 67.0114 L477.125 67.0114 Z" clip-path="url(#clipPath2)"/>
       <path fill="none" d="M575.2631 -53.5 L726.1334 -53.5" clip-path="url(#clipPath2)"/>
       <path d="M734.1334 -53.5 L722.1334 -58.5 L725.1334 -53.5 L722.1334 -48.5 Z" clip-path="url(#clipPath2)" stroke="none"/>
-      <text x="625.4932" xml:space="preserve" y="-56.0605" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">notifies →</text>
-      <text x="652.7891" xml:space="preserve" y="-42.0977" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
+      <text x="625.0596" xml:space="preserve" y="-56.0312" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">notifies →</text>
+      <text x="652.7891" xml:space="preserve" y="-41.8984" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
       <path fill="none" d="M575.2775 33.1803 L721.0146 33.1803" clip-path="url(#clipPath2)"/>
       <path d="M729.0146 33.1803 L717.0146 28.1803 L720.0146 33.1803 L717.0146 38.1803 Z" clip-path="url(#clipPath2)" stroke="none"/>
-      <text x="622.9307" xml:space="preserve" y="23.6383" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">notifies →</text>
-      <text x="650.2266" xml:space="preserve" y="37.6012" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
-      <text x="650.2266" xml:space="preserve" y="51.5641" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
-      <path fill="none" d="M689.125 154.4837 L689.125 85 L471.125 85 L471.125 66.0114" clip-path="url(#clipPath2)"/>
+      <text x="622.4971" xml:space="preserve" y="23.5826" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none">notifies →</text>
+      <text x="650.2266" xml:space="preserve" y="37.7154" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
+      <text x="650.2266" xml:space="preserve" y="51.8482" clip-path="url(#clipPath2)" font-family="sans-serif" stroke="none"> </text>
+      <path fill="none" d="M689.125 154.4963 L689.125 85 L471.125 85 L471.125 66.0114" clip-path="url(#clipPath2)"/>
       <path fill="white" d="M471.125 51.0114 L465.125 67.0114 L477.125 67.0114 Z" clip-path="url(#clipPath2)" stroke="none"/>
       <path fill="none" d="M471.125 51.0114 L465.125 67.0114 L477.125 67.0114 Z" clip-path="url(#clipPath2)"/>
     </g>
