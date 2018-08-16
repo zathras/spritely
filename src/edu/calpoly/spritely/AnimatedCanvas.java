@@ -55,6 +55,7 @@ import javax.swing.JComponent;
 abstract class AnimatedCanvas extends JComponent implements Display {
 
     private final JFrame frame;
+    private final Object LOCK = new Object();
     private BufferStrategy bufferStrategy;
     private double scale = 1.0;
     private long keyDownEventWhen = Long.MIN_VALUE;
@@ -122,6 +123,10 @@ abstract class AnimatedCanvas extends JComponent implements Display {
         });
 	frame.pack();
 	frame.createBufferStrategy(2);
+	// Double-buffering is necessary here, even though we just draw
+	// a BufferedImage into the frame.  With an argument of 1 supplied
+	// here, flashing artifacts are visible on at least Linux.
+
 	bufferStrategy = frame.getBufferStrategy();
 	frame.setVisible(true);
 
@@ -151,27 +156,19 @@ abstract class AnimatedCanvas extends JComponent implements Display {
     }
 
     private void handleKeyTyped(KeyEvent e) {
-	final AnimationWindow window = getWindow();
-	synchronized(window.LOCK) {
-	    if (e.getWhen() != keyDownEventWhen
-		|| (e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == 0)
-	    {
-		// We don't want to send the alt-plus, alt-minus or alt-0
-		// to our client.
-		window.keyTyped(e.getKeyChar());
-		window.LOCK.notifyAll();
-	    }
+	if (e.getWhen() != keyDownEventWhen
+	    || (e.getModifiersEx() & InputEvent.ALT_DOWN_MASK) == 0)
+	{
+	    // We don't want to send the alt-plus, alt-minus or alt-0
+	    // to our client.
+	    getWindow().keyTyped(e.getKeyChar());
 	}
     }
 
     private void handleMouseClicked(MouseEvent e) {
-	final AnimationWindow window = getWindow();
-	synchronized(window.LOCK) {
-	    double sx = Math.round(e.getX() / scale);
-	    double sy = Math.round(e.getY() / scale);
-	    window.mouseClicked(sx, sy);
-	    window.LOCK.notifyAll();
-	}
+	double sx = Math.round(e.getX() / scale);
+	double sy = Math.round(e.getY() / scale);
+	getWindow().mouseClicked(sx, sy);
     }
 
     private void setScale(double scale) {
@@ -202,7 +199,7 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 
     @Override
     public void paint(Graphics graphicsArg) {
-	synchronized(getWindow().LOCK) {
+	synchronized(LOCK) {
 	    if (scale == 1.0) {
 		graphicsArg.drawImage(currentBuffer, 0, 0, null);
 	    } else {
@@ -216,7 +213,7 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 
     protected void showNextBuffer() {
 	final AnimationWindow window = getWindow();
-	synchronized(window.LOCK) {
+	synchronized(LOCK) {
 	    BufferedImage tmp = nextBuffer;
 	    nextBuffer = currentBuffer;
 	    currentBuffer = tmp;
@@ -224,10 +221,8 @@ abstract class AnimatedCanvas extends JComponent implements Display {
         try {
             do {
                 do {
-		    synchronized(window.LOCK) {
-			if (!window.isRunning()) {
-			    return;
-			}
+		    if (!window.isRunning()) {
+			return;
 		    }
 		    Graphics bsg = bufferStrategy.getDrawGraphics();
 		    frame.paint(bsg);

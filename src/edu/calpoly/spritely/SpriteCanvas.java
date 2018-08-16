@@ -90,10 +90,8 @@ class SpriteCanvas extends AnimatedCanvas implements SpriteDisplay {
     // Called from SpriteWindow.start()
     //
     public void setInitialFrame(AnimationFrame f) {
-	synchronized(window.LOCK) {
-	    assert lastAnimationFrame == null;
-	    lastAnimationFrame = f;
-	}
+	assert lastAnimationFrame == null;
+	lastAnimationFrame = f;
     }
 
     public void showFrame(AnimationFrame f) {

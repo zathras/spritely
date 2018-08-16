@@ -1,7 +1,27 @@
 
+/*
+ * Copyright © 2018, Bill Foote, Cal Poly, San Luis Obispo, CA
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining 
+ * a copy of this software and associated documentation files (the “Software”), 
+ * to deal in the Software without restriction, including without limitation 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the 
+ * Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included 
+ * in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package edu.calpoly.spritely;
-import javax.swing.JFrame;
-import java.util.LinkedList;
 
 /**
  * An AnimationWindow controls the animation of a screen.  
@@ -17,18 +37,9 @@ public abstract class AnimationWindow {
     public final static double DEFAULT_FPS = 30.0;
 
     final String name;
-    final Object LOCK = new Object();
-
-    private boolean started = false;
-    private boolean running = false;
-    private boolean opened = false;
-    private double fps = DEFAULT_FPS;
-    private long startTime;
-    private long currFrame;     // int would only buy < 2 years of animation :-)
-    private LinkedList<Runnable> eventQueue = new LinkedList<>();
+    private final AnimationController controller = new AnimationController();
     private KeyTypedHandler keyHandler = null;
     private MouseClickedHandler mouseHandler = null;
-    private boolean silent = false;
 
     AnimationWindow(String name) {
 	this.name = name;
@@ -36,13 +47,8 @@ public abstract class AnimationWindow {
 
     abstract Display getDisplay();
 
-    //
-    // Throw IllegalStateExcption if started isn't in the right state
-    //
     void checkStarted(boolean expected) {
-        if (started != expected) {
-            throw new IllegalStateException("AnimationWindow.start()");
-        }
+	controller.checkStarted(expected);
     }
 
     /**
@@ -53,12 +59,11 @@ public abstract class AnimationWindow {
      * @see DEFAULT_FPS
      */
     public void setFps(double fps) {
-        checkStarted(false);
-        this.fps = fps;
+	controller.setFps(fps);
     }
 
     double getFps() {
-	return fps;
+	return controller.getFps();
     }
 
     /**
@@ -70,11 +75,11 @@ public abstract class AnimationWindow {
      * @param silent	true if you don't want to get warnings.
      */
     public void setSilent(boolean silent) {
-	this.silent = silent;
+	controller.setSilent(silent);
     }
 
     boolean getSilent() {
-	return silent;
+	return controller.getSilent();
     }
 
     /**
@@ -88,7 +93,7 @@ public abstract class AnimationWindow {
      * @see GraphicsWindow#waitForNextFrame()
      */
     public void setKeyTypedHandler(KeyTypedHandler handler) {
-        checkStarted(false);
+        controller.checkStarted(false);
         if (this.keyHandler != null) {
             throw new IllegalStateException();
         }
@@ -107,7 +112,7 @@ public abstract class AnimationWindow {
      * @see GraphicsWindow#waitForNextFrame()
      */
     public void setMouseClickedHandler(MouseClickedHandler handler) {
-        checkStarted(false);
+        controller.checkStarted(false);
         if (this.mouseHandler != null) {
             throw new IllegalStateException();
         }
@@ -115,8 +120,8 @@ public abstract class AnimationWindow {
     }
 
     void keyTyped(char ch) {
-        if (running && keyHandler != null) {
-            eventQueue.add(() -> keyHandler.keyTyped(ch));
+        if (controller.isRunning() && keyHandler != null) {
+            controller.queueEvent(() -> keyHandler.keyTyped(ch));
         }
     }
 
@@ -125,18 +130,15 @@ public abstract class AnimationWindow {
     // further scales by tile size.
     //
     void mouseClicked(double sx, double sy) {
-        if (running && mouseHandler != null) {
+        if (controller.isRunning() && mouseHandler != null) {
             final int x = (int) sx;
             final int y = (int) sy;
-            eventQueue.add(() -> mouseHandler.mouseClicked(x, y));
+            controller.queueEvent(() -> mouseHandler.mouseClicked(x, y));
         }
     }
-    
+   
     void setOpened() {
-	synchronized(LOCK) {
-	    opened = true;
-	    LOCK.notifyAll();
-	}
+	controller.setOpened();
     }
 
 
@@ -151,12 +153,7 @@ public abstract class AnimationWindow {
      * @see #stop()
      */
     public boolean isRunning() {
-        if (!started) {
-            return false;
-        }
-        synchronized(LOCK) {
-            return running;
-        }
+	return controller.isRunning();
     }
 
     /**
@@ -181,24 +178,20 @@ public abstract class AnimationWindow {
      * @see System#currentTimeMillis()
      */
     public double getTimeSinceStart() {
-        return currFrame * (1000 / fps);
+        return controller.getTimeSinceStart();
     }
 
 
     /**
-     * Start this window.  This * may only be called once per window.
+     * Start this window.  This may only be called once per window.
      *
      * @throws IllegalStateException  if we were already started
      */
     public void start() {
+	controller.start();
 	Display display = getDisplay();
 	assert display  != null;	// our subclass must create a display
-        checkStarted(false);
-        started = true;
-        running = true;
         display.start();
-        startTime = System.currentTimeMillis();
-        currFrame = -1L;
     }
 
     /**
@@ -208,12 +201,7 @@ public abstract class AnimationWindow {
      * @throws IllegalStateException    if we were never started
      */
     public void stop() {
-        checkStarted(true);
-        synchronized(LOCK) {
-	    running = false;
-	    eventQueue = null;
-            LOCK.notifyAll();
-        }
+	controller.stop();
 	getDisplay().closeFrame();
     }
 
@@ -221,73 +209,10 @@ public abstract class AnimationWindow {
     // Wait until it's time to produce the next frame of animation.  Return
     // true if we're still running and all is good, and false if we're
     // stopped.  Subclasses implement a public waitForNextFrame() that
+    // calls this
     //
     boolean waitForNextFrameImpl() {
-        synchronized(LOCK) {
-            currFrame++;
-        }
-        boolean excused = false;
-        for (;;) {
-            Runnable event = null;
-            synchronized(LOCK) {
-                if (!running) {
-                    return false;
-                } else if (!eventQueue.isEmpty()) {
-                    event = eventQueue.removeFirst();
-                } else if (getDisplay().pollForInput(mouseHandler != null)) {
-                    excused = true;
-		} else if (!opened) {
-		    assert currFrame == 0;
-		    try {
-			LOCK.wait();
-		    } catch (InterruptedException ex) {
-			stop();
-			Thread.currentThread().interrupt();
-			return false;
-		    }
-		    startTime = System.currentTimeMillis();
-                } else {
-                    double frameMS = 1000 / fps;
-                    double timeSinceStart = getTimeSinceStart();
-                    long nextTime = startTime + (long) timeSinceStart;
-                    long now = System.currentTimeMillis();
-                    long waitTime = nextTime - now;
-                    if (waitTime < -4 * frameMS 
-		        || (excused && waitTime < -frameMS))
-		    {
-			// Don't drop more than 4 frames
-                        if (excused) {
-                            excused = false;
-                        } else if (!silent) {
-                            System.out.println(
-                                "NOTE (Spritely):  Animation fell behind by " +
-				(long) Math.ceil(-frameMS - waitTime) + 
-				" ms on frame " + currFrame + ".");
-			    System.out.println(
-				"                  Animation clock reset.");
-                        }
-                        startTime = now - (long) timeSinceStart;
-                        break;
-                    } else if (waitTime < -frameMS) {
-			currFrame++;	// Drop a frame
-                    } else if (waitTime <= 0) {
-                        break;
-                    } else {
-                        try {
-                            LOCK.wait(waitTime);
-                        } catch (InterruptedException ex) {
-                            stop();
-                            Thread.currentThread().interrupt();
-                            return false;
-                        }
-                    }
-                }
-            }
-            if (event != null) {
-                event.run();
-            }
-        }
-	return true;
+	return controller.waitForNextFrame(getDisplay(), mouseHandler != null);
     }
 
     /**
@@ -318,36 +243,6 @@ public abstract class AnimationWindow {
         if (getDisplay() == null) {
             throw new IllegalStateException();
         }
-	if (pauseMS < 0) {
-	    return;
-	}
-	long timeWanted = System.currentTimeMillis() + pauseMS;
-	synchronized(LOCK) {
-	    for (;;) {
-		if (!running) {
-		    return;
-		}
-		long now = System.currentTimeMillis();
-		long toWait = timeWanted - now;
-		if (toWait <= 0L) {
-		    break;
-		}
-		try {
-		    LOCK.wait(toWait);
-		} catch (InterruptedException ex) {
-		    stop();
-		    Thread.currentThread().interrupt();
-		    return;
-		}
-	    }
-	    //
-	    // Reset the animation clock:
-	    //
-	    double timeSinceStart = getTimeSinceStart();
-	    long newStart = System.currentTimeMillis() - (long) timeSinceStart;
-	    if (newStart > startTime) {
-		startTime = newStart;
-	    }
-	}
+	controller.pauseAnimation(pauseMS);
     }
 }
