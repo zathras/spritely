@@ -44,9 +44,8 @@ final class SpriteScreen implements SpriteDisplay {
         System.out.println();
         // Set the title:  http://tldp.org/HOWTO/Xterm-Title-3.html
         System.out.println("" + ((char) 27) + "]0;" + window.name + ((char) 7));
-	if (initialFrame == null) {
-	    clearScreen();
-	} else {
+	clearScreen();
+	if (initialFrame != null) {
 	    showFrame(initialFrame);
 	    initialFrame = null;
 	}

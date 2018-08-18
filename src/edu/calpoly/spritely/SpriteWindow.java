@@ -42,14 +42,16 @@ import java.util.LinkedList;
  *    SpriteWindow window = new SpriteWindow(...);
  *    window.setXXX() (frames/second, callbacks, etc.)
  *    window.start();
- *    while (!window.getStopped()) {
+ *    while (window.isRunning()) {
  *        update any needed data structures
  *        AnimationFrame frame = window.waitForNextFrame();        
  *        if (frame == null) {   // Stopped
  *            break;
  *        }
- *        call frame.addTile(x, y, Tile) for the displayed tiles;
- *        window.showNextFrame();
+ *        if (there might be a change to show in this animation frame) {
+ *            call frame.addTile(x, y, Tile) for the displayed tiles;
+ *            window.showNextFrame();
+ *        }
  *        do anything else you want to do
  *        if (you're done with window) {
  *            window.stop();
@@ -225,7 +227,10 @@ public final class SpriteWindow extends AnimationWindow {
 
     /**
      * Show the next frame of animation.  The AnimationFrame last returned
-     * by waitForNextFrame is displayed to the screen.
+     * by waitForNextFrame is displayed to the screen.  If nothing has changed
+     * since the last frame of animation, it's OK to not call this method.  If
+     * showNextFrame() is not called, the previous animation frame will continue
+     * to be shown.
      *
      * @throws IllegalStateException if waitForNextFrame() has not been called,
      *				    or if start has not been called, or if the

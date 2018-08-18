@@ -39,7 +39,7 @@ import java.util.LinkedList;
  *    GraphicsWindow window = new GraphicsWindow(...);
  *    window.setXXX() (frames/second, callbacks, etc.)
  *    window.start();
- *    while (!window.getStopped()) {
+ *    while (window.isRunning()) {
  *        update any needed data structures
  *        Grahpics2D g = window.waitForNextFrame();        
  *        if (g == null) {   // Stopped
@@ -197,6 +197,7 @@ public final class GraphicsWindow extends AnimationWindow {
      *				    or if start has not been called, or if the
      *				    animation has been stopped.
      * @see #waitForNextFrame()
+     * @see #showNextFrame(boolean)
      */
     public void showNextFrame() {
 	showNextFrame(true);

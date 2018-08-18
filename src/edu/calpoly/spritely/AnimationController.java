@@ -40,7 +40,7 @@ import java.util.LinkedList;
  *    controller.setXXX() (frames/second, etc.)
  *    controller.setOpened();  // Assuming canvas has been opened
  *    controller.start();
- *    while (!controller.getStopped()) {
+ *    while (controller.isRunning()) {
  *        update any needed data structures
  *        if (controller.waitForNextFrame()) {
  *            break;
