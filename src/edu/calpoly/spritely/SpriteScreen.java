@@ -101,7 +101,7 @@ final class SpriteScreen implements SpriteDisplay {
     }
 
     @Override
-    public synchronized boolean pollForInput(boolean mouseWanted) {
+    public boolean pollForInput(boolean mouseWanted) {
         if (!mouseNoticeGiven && frameShown && mouseWanted) {
 	    // We don't respect window.getSilent() here, since text mode
 	    // really is just intended for debugging.
