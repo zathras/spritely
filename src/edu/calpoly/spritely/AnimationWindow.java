@@ -163,7 +163,7 @@ public abstract class AnimationWindow {
      * is suspended for a time, e.g. for debugging.  It is therefore 
      * recommended that all time-based events in an animation be based off 
      * the time value returned by this method, rather than e.g.
-     * System.currentTimeMillis().
+     * System.nanoTime().
      * <p>
      * If the system can't keep up with the frame rate, it will drop up
      * to four frames.  Past that limit, it will print a diagnostic
@@ -175,7 +175,7 @@ public abstract class AnimationWindow {
      *
      * @see #pauseAnimation(int)
      * @see #setSilent(boolean)
-     * @see System#currentTimeMillis()
+     * @see System#nanoTime()
      */
     public double getTimeSinceStart() {
         return controller.getTimeSinceStart();

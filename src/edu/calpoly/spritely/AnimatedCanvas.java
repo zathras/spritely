@@ -44,6 +44,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferStrategy;
+import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.SwingUtilities;
 import javax.swing.JScrollPane;
 import javax.swing.JFrame;
@@ -55,7 +56,7 @@ import javax.swing.JComponent;
 abstract class AnimatedCanvas extends JComponent implements Display {
 
     private final JFrame frame;
-    private final Object LOCK = new Object();
+    private final ReentrantLock LOCK = new ReentrantLock();
     private BufferStrategy bufferStrategy;
     private double scale = 1.0;
     private long keyDownEventWhen = Long.MIN_VALUE;
@@ -199,7 +200,8 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 
     @Override
     public void paint(Graphics graphicsArg) {
-	synchronized(LOCK) {
+	LOCK.lock();
+	try {
 	    if (scale == 1.0) {
 		graphicsArg.drawImage(currentBuffer, 0, 0, null);
 	    } else {
@@ -208,15 +210,20 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 		g.drawImage(currentBuffer, 0, 0, null);
 		g.dispose();
 	    }
+	} finally {
+	    LOCK.unlock();
 	}
     }
 
     protected void showNextBuffer() {
 	final AnimationWindow window = getWindow();
-	synchronized(LOCK) {
+	LOCK.lock();
+	try {
 	    BufferedImage tmp = nextBuffer;
 	    nextBuffer = currentBuffer;
 	    currentBuffer = tmp;
+	} finally {
+	    LOCK.unlock();
 	}
         try {
             do {

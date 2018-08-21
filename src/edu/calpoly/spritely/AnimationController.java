@@ -24,6 +24,8 @@
 package edu.calpoly.spritely;
 
 import java.util.LinkedList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * An AnimationController controls the timing aspects on an animation.
@@ -60,7 +62,10 @@ import java.util.LinkedList;
      */
     public final static double DEFAULT_FPS = 30.0;
 
-    private final Object LOCK = new Object();
+    private final static long MS_TO_NANOS = 1_000_000L;
+
+    private final ReentrantLock LOCK = new ReentrantLock();
+    private final Condition LOCK_CONDITION = LOCK.newCondition();
     private boolean started = false;
     private boolean running = false;
     private boolean opened = false;
@@ -127,9 +132,12 @@ import java.util.LinkedList;
      * proceed.
      */
     public void setOpened() {
-	synchronized(LOCK) {
+	LOCK.lock();
+	try {
 	    opened = true;
-	    LOCK.notifyAll();
+	    LOCK_CONDITION.signalAll();
+	} finally {
+	    LOCK.unlock();
 	}
     }
 
@@ -144,11 +152,14 @@ import java.util.LinkedList;
      * @see #waitForNextFrame()
      */
     public void queueEvent(Runnable event) {
-	synchronized(LOCK) {
+	LOCK.lock();
+	try {
 	    if (eventQueue != null) {
 		eventQueue.add(event);
 	    }
-	    LOCK.notifyAll();
+	    LOCK_CONDITION.signalAll();
+	} finally {
+	    LOCK.unlock();
 	}
     }
 
@@ -166,8 +177,11 @@ import java.util.LinkedList;
         if (!started) {
             return false;
         }
-        synchronized(LOCK) {
+	LOCK.lock();
+	try {
             return running;
+	} finally {
+	    LOCK.unlock();
         }
     }
 
@@ -178,7 +192,7 @@ import java.util.LinkedList;
      * is suspended for a time, e.g. for debugging.  It is therefore 
      * recommended that all time-based events in an animation be based off 
      * the time value returned by this method, rather than e.g.
-     * System.currentTimeMillis().
+     * System.nanoTime().
      * <p>
      * If the system can't keep up with the frame rate, it will drop up
      * to four frames.  Past that limit, it will print a diagnostic
@@ -190,10 +204,10 @@ import java.util.LinkedList;
      *
      * @see #pauseAnimation(int)
      * @see #setSilent(boolean)
-     * @see System#currentTimeMillis()
+     * @see System#nanoTime()
      */
     public double getTimeSinceStart() {
-        return currFrame * (1000 / fps);
+	return currFrame * (1000 / fps);
     }
 
 
@@ -206,7 +220,7 @@ import java.util.LinkedList;
         checkStarted(false);
         started = true;
         running = true;
-        startTime = System.currentTimeMillis();
+        startTime = System.nanoTime();
         currFrame = -1L;
     }
 
@@ -217,10 +231,13 @@ import java.util.LinkedList;
      */
     public void stop() {
         checkStarted(true);
-        synchronized(LOCK) {
+	LOCK.lock();
+	try {
 	    running = false;
 	    eventQueue = null;
-            LOCK.notifyAll();
+	    LOCK_CONDITION.signalAll();
+	} finally {
+	    LOCK.unlock();
         }
     }
 
@@ -244,13 +261,12 @@ import java.util.LinkedList;
     // hierarchy.
     //
     boolean waitForNextFrame(Display display, boolean mouseWanted) {
-        synchronized(LOCK) {
-            currFrame++;
-        }
+	currFrame++;
         boolean excused = false;
         for (;;) {
             Runnable event = null;
-            synchronized(LOCK) {
+	    LOCK.lock();
+	    try {
                 if (!running) {
                     return false;
                 } else if (!eventQueue.isEmpty()) {
@@ -262,21 +278,21 @@ import java.util.LinkedList;
 		} else if (!opened) {
 		    assert currFrame == 0;
 		    try {
-			LOCK.wait();
+			LOCK_CONDITION.await();
 		    } catch (InterruptedException ex) {
 			stop();
 			Thread.currentThread().interrupt();
 			return false;
 		    }
-		    startTime = System.currentTimeMillis();
+		    startTime = System.nanoTime();
                 } else {
-                    double frameMS = 1000 / fps;
-                    double timeSinceStart = getTimeSinceStart();
+                    double frameNS = MS_TO_NANOS * 1000 / fps;
+                    double timeSinceStart = getTimeSinceStart() * MS_TO_NANOS;
                     long nextTime = startTime + (long) timeSinceStart;
-                    long now = System.currentTimeMillis();
+                    long now = System.nanoTime();
                     long waitTime = nextTime - now;
-                    if (waitTime < -4 * frameMS 
-		        || (excused && waitTime < -frameMS))
+                    if (waitTime < -4 * frameNS 
+		        || (excused && waitTime < -frameNS))
 		    {
 			// Don't drop more than 4 frames
                         if (excused) {
@@ -284,20 +300,21 @@ import java.util.LinkedList;
                         } else if (!silent) {
                             System.out.println(
                                 "NOTE (Spritely):  Animation fell behind by " +
-				(long) Math.ceil(-frameMS - waitTime) + 
-				" ms on frame " + currFrame + ".");
+				(long) Math.ceil((-frameNS - waitTime)
+						 / MS_TO_NANOS)
+				+ " ms on frame " + currFrame + ".");
 			    System.out.println(
 				"                  Animation clock reset.");
                         }
                         startTime = now - (long) timeSinceStart;
                         break;
-                    } else if (waitTime < -frameMS) {
+                    } else if (waitTime < -frameNS) {
 			currFrame++;	// Drop a frame
                     } else if (waitTime <= 0) {
                         break;
                     } else {
                         try {
-                            LOCK.wait(waitTime);
+			    LOCK_CONDITION.awaitNanos(waitTime);
                         } catch (InterruptedException ex) {
                             stop();
                             Thread.currentThread().interrupt();
@@ -305,6 +322,8 @@ import java.util.LinkedList;
                         }
                     }
                 }
+	    } finally {
+		LOCK.unlock();
             }
             if (event != null) {
                 event.run();
@@ -342,19 +361,20 @@ import java.util.LinkedList;
 	if (pauseMS < 0) {
 	    return;
 	}
-	long timeWanted = System.currentTimeMillis() + pauseMS;
-	synchronized(LOCK) {
+	long timeWanted = System.nanoTime() + pauseMS * MS_TO_NANOS;
+	LOCK.lock();
+	try {
 	    for (;;) {
 		if (!running) {
 		    return;
 		}
-		long now = System.currentTimeMillis();
+		long now = System.nanoTime();
 		long toWait = timeWanted - now;
 		if (toWait <= 0L) {
 		    break;
 		}
 		try {
-		    LOCK.wait(toWait);
+		    LOCK_CONDITION.awaitNanos(toWait);
 		} catch (InterruptedException ex) {
 		    stop();
 		    Thread.currentThread().interrupt();
@@ -364,11 +384,13 @@ import java.util.LinkedList;
 	    //
 	    // Reset the animation clock:
 	    //
-	    double timeSinceStart = getTimeSinceStart();
-	    long newStart = System.currentTimeMillis() - (long) timeSinceStart;
+	    double timeSinceStart = getTimeSinceStart() * MS_TO_NANOS;
+	    long newStart = System.nanoTime() - (long) timeSinceStart;
 	    if (newStart > startTime) {
 		startTime = newStart;
 	    }
+	} finally {
+	    LOCK.unlock();
 	}
     }
 }
