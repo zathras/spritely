@@ -23,6 +23,7 @@
 package edu.calpoly.spritely;
 
 
+import java.awt.GraphicsEnvironment;
 import java.awt.Graphics2D;
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
@@ -63,28 +64,32 @@ public class ImageTile implements Tile {
             throws IOException 
     {
         BufferedImage im;
-	if (!imageFile.exists()) {
-	    throw new IOException("File not found:  " + imageFile);
+	if (GraphicsEnvironment.getLocalGraphicsEnvironment().isHeadless()) {
+	    im = null;
+	} else {
+	    if (!imageFile.exists()) {
+		throw new IOException("File not found:  " + imageFile);
+	    }
+	    try { 
+		im = ImageIO.read(imageFile);
+	    } catch (IOException ex) {
+		System.err.println("***  Error reading " + imageFile);
+		throw ex;
+	    }
+	    if (im.getWidth() != size.width || im.getHeight() != size.height) {
+		double scaleX = ((double) size.width) / im.getWidth();
+		double scaleY = ((double) size.height) / im.getHeight();
+		BufferedImage after = 
+			new BufferedImage(size.width, size.height,im.getType());
+		AffineTransform scale = 
+		    AffineTransform.getScaleInstance(scaleX, scaleY);
+		AffineTransformOp scaleOp = 
+			new AffineTransformOp(scale, 
+					      AffineTransformOp.TYPE_BILINEAR);
+		scaleOp.filter(im, after);
+		im = after;
+	    }
 	}
-	try { 
-	    im = ImageIO.read(imageFile);
-	} catch (IOException ex) {
-	    System.err.println("***  Error reading " + imageFile);
-	    throw ex;
-	}
-        if (im.getWidth() != size.width || im.getHeight() != size.height) {
-            double scaleX = ((double) size.width) / im.getWidth();
-            double scaleY = ((double) size.height) / im.getHeight();
-            BufferedImage after = 
-                    new BufferedImage(size.width, size.height, im.getType());
-            AffineTransform scale = 
-                AffineTransform.getScaleInstance(scaleX, scaleY);
-            AffineTransformOp scaleOp = 
-                    new AffineTransformOp(scale, 
-                                          AffineTransformOp.TYPE_BILINEAR);
-            scaleOp.filter(im, after);
-            im = after;
-        }
         this.image = im;
         this.text = text;
     }
