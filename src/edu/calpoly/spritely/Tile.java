@@ -46,7 +46,8 @@ public interface Tile {
      *
      * @param g         The Java graphics context to draw into, with an
      *                  appropriate translation and crop already set.
-     * @param size      The size of this tile
+     * @param size      The size of this tile.  For a given window, the
+     *                  value of size will never change.
      * @see java.awt.AlphaComposite#SrcOver
      */
     public void paint(Graphics2D g, Size size);

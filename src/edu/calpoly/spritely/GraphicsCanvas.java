@@ -22,27 +22,55 @@
 
 package edu.calpoly.spritely;
 
-/**
- * Something that can display an animation frame of sprites.  This can either 
- * be a text display (SpriteScreen), or a graphical display (SpriteCanvas).
- *
- *      @author         Bill Foote, http://jovial.com
- */
-interface SpriteDisplay extends Display {
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 
-    /**
-     * Show the given frame of animation
-     *
-     * @param f the frame to show
-     */
-    public void showFrame(AnimationFrame f);
+//
+// The main display window in for a GrahpicsWindow 
+//
+final class GraphicsCanvas extends AnimatedCanvas {
 
-    /**
-     * Set up for the given initial frame of animation.  Calling this
-     * method is optional.  If it is called, it must be called before
-     * start().
-     *
-     * @param f the frame to show
-     */
-    public void setInitialFrame(AnimationFrame f);
+    private final GraphicsWindow window;
+
+    GraphicsCanvas(GraphicsWindow window) {
+	super(window.name);
+	this.window = window;
+    }
+
+    @Override
+    AnimationWindow getWindow() {
+	return window;
+    }
+
+    @Override
+    Dimension getCanvasSize() {
+	Size canvasSize = window.canvasSize;
+	return new Dimension(canvasSize.width, canvasSize.height);
+    }
+
+    Graphics2D createGraphicsForInitialFrame(Size canvasSize) {
+	assert currentBuffer == null;
+	currentBuffer = createBuffer(canvasSize.width, canvasSize.height);
+	return currentBuffer.createGraphics();
+    }
+
+    Graphics2D createGraphicsForNextBuffer() {
+	return nextBuffer.createGraphics();
+    }
+
+    @Override
+    void finishInitialFrame(Dimension canvasSize) {
+	window.finishInitialFrame();
+    }
+
+    void paintLastFrameTo(Graphics2D g) {
+	g.drawImage(currentBuffer, 0, 0, null);
+    }
+
+    void showFrame(boolean drawingWasDone) {
+	if (drawingWasDone) {
+	    showNextBuffer();
+	}
+    }
 }

@@ -1,11 +1,13 @@
 #!/bin/bash
 
+cd `dirname $0`
 #
 # Compile the program:
 #
 rm -rf out
 mkdir out
-javac -Xlint:unchecked -sourcepath src:../src -d out src/Main.java
+javac -Xlint:unchecked -sourcepath src:../src -d out \
+	src/Main.java ../src/edu/calpoly/spritely/*.java
 if [ $? != 0 ] ; then
     exit 1
 fi

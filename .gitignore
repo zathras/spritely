@@ -1,6 +1,6 @@
-.idea
-.swp
-.DS_Store
+*.idea
+*.swp
+*.DS_Store
 
 # Compiled class file
 *.class

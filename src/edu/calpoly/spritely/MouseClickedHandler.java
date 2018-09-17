@@ -37,11 +37,13 @@ import java.awt.event.MouseEvent;
 public interface MouseClickedHandler {
 
     /**
-     * Called when the mouse is clicked
+     * Called when the mouse is clicked.  Note
+     * that SpriteWindow scales the x an y coordinate so that they refer
+     * to tiles, not pixels.
      *
-     * @param gridX  The column clicked on (0-based)
-     * @param gridY  The row clicked on (0-based)
+     * @param x	    The column clicked on (0-based)
+     * @param y	    The row clicked on (0-based)
      */
-    void mouseClicked(int gridX, int gridY);
+    void mouseClicked(int x, int y);
 
 }
