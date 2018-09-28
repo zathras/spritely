@@ -68,4 +68,9 @@ public final class Size {
             return false;
         }
     }
+
+    @Override
+    public String toString() {
+	return getClass().getName() + "(" + width + ", " + height + ")";
+    }
 }
