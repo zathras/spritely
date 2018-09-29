@@ -141,7 +141,7 @@ public final class SpriteWindow extends AnimationWindow {
     /**
      * Sets the tile size to the desired value.
      *
-     * @param  tileSize The desired tile size
+     * @param  tileSize The desired tile size, in pixels.
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_TILE_SIZE
      */

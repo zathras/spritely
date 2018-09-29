@@ -104,7 +104,7 @@ public abstract class AnimationWindow {
      * Sets a mouse handler.  If the mouse is clicked, the mouse event will
      * be sent to the handler during a call to waitForNextFrame().  Note
      * that SpriteWindow scales the x an y coordinate so that they refer
-     * to tiles, not pixels.
+     * to the row and column of a tile square, not pixels.
      *
      * @param handler   The handler.
      * @throws IllegalStateException if start() has been called.
