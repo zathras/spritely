@@ -74,6 +74,7 @@ import java.util.concurrent.locks.ReentrantLock;
     private long currFrame;     // int would only buy < 2 years of animation :-)
     private LinkedList<Runnable> eventQueue = new LinkedList<>();
     private boolean silent = false;
+    private boolean inWaitForNextFrame = false;
 
     /**
      * Throw an IllegalStateException if started isn't in the expected state.
@@ -261,73 +262,87 @@ import java.util.concurrent.locks.ReentrantLock;
     // hierarchy.
     //
     boolean waitForNextFrame(Display display, boolean mouseWanted) {
+        if (inWaitForNextFrame) {
+            System.out.println();
+            System.out.println("*** Spritely WARNING ***");
+            System.out.println("     Spritely detected a call to waitForNextFrame()");
+            System.out.println("    during a call to waitForNextFrame().  Perhaps you called it");
+            System.out.println("    from a mouse or keyboard handler?  This is forbidden., and will");
+            System.out.println("    soon be turned into a hard failure.");
+            System.out.println();
+        }
+        inWaitForNextFrame = true;
 	currFrame++;
         boolean excused = false;
-        for (;;) {
-            Runnable event = null;
-	    LOCK.lock();
-	    try {
-                if (!running) {
-                    return false;
-                } else if (!eventQueue.isEmpty()) {
-                    event = eventQueue.removeFirst();
-                } else if (display != null 
-			   && display.pollForInput(mouseWanted)) 
-		{
-                    excused = true;
-		} else if (!opened) {
-		    assert currFrame == 0;
-		    try {
-			LOCK_CONDITION.await();
-		    } catch (InterruptedException ex) {
-			stop();
-			Thread.currentThread().interrupt();
-			return false;
-		    }
-		    startTime = System.nanoTime();
-                } else {
-                    double frameNS = MS_TO_NANOS * 1000 / fps;
-                    double timeSinceStart = getTimeSinceStart() * MS_TO_NANOS;
-                    long nextTime = startTime + (long) timeSinceStart;
-                    long now = System.nanoTime();
-                    long waitTime = nextTime - now;
-                    if (waitTime < -4 * frameNS 
-		        || (excused && waitTime < -frameNS))
-		    {
-			// Don't drop more than 4 frames
-                        if (excused) {
-                            excused = false;
-                        } else if (!silent) {
-                            System.out.println(
-                                "NOTE (Spritely):  Animation fell behind by " +
-				(long) Math.ceil((-frameNS - waitTime)
-						 / MS_TO_NANOS)
-				+ " ms on frame " + currFrame + ".");
-			    System.out.println(
-				"                  Animation clock reset.");
-                        }
-                        startTime = now - (long) timeSinceStart;
-                        break;
-                    } else if (waitTime < -frameNS) {
-			currFrame++;	// Drop a frame
-                    } else if (waitTime <= 0) {
-                        break;
-                    } else {
+        try {
+            for (;;) {
+                Runnable event = null;
+                LOCK.lock();
+                try {
+                    if (!running) {
+                        return false;
+                    } else if (!eventQueue.isEmpty()) {
+                        event = eventQueue.removeFirst();
+                    } else if (display != null 
+                               && display.pollForInput(mouseWanted)) 
+                    {
+                        excused = true;
+                    } else if (!opened) {
+                        assert currFrame == 0;
                         try {
-			    LOCK_CONDITION.awaitNanos(waitTime);
+                            LOCK_CONDITION.await();
                         } catch (InterruptedException ex) {
                             stop();
                             Thread.currentThread().interrupt();
                             return false;
                         }
+                        startTime = System.nanoTime();
+                    } else {
+                        double frameNS = MS_TO_NANOS * 1000 / fps;
+                        double timeSinceStart = getTimeSinceStart() * MS_TO_NANOS;
+                        long nextTime = startTime + (long) timeSinceStart;
+                        long now = System.nanoTime();
+                        long waitTime = nextTime - now;
+                        if (waitTime < -4 * frameNS 
+                            || (excused && waitTime < -frameNS))
+                        {
+                            // Don't drop more than 4 frames
+                            if (excused) {
+                                excused = false;
+                            } else if (!silent) {
+                                System.out.println(
+                                    "NOTE (Spritely):  Animation fell behind by " +
+                                    (long) Math.ceil((-frameNS - waitTime)
+                                                     / MS_TO_NANOS)
+                                    + " ms on frame " + currFrame + ".");
+                                System.out.println(
+                                    "                  Animation clock reset.");
+                            }
+                            startTime = now - (long) timeSinceStart;
+                            break;
+                        } else if (waitTime < -frameNS) {
+                            currFrame++;	// Drop a frame
+                        } else if (waitTime <= 0) {
+                            break;
+                        } else {
+                            try {
+                                LOCK_CONDITION.awaitNanos(waitTime);
+                            } catch (InterruptedException ex) {
+                                stop();
+                                Thread.currentThread().interrupt();
+                                return false;
+                            }
+                        }
                     }
+                } finally {
+                    LOCK.unlock();
                 }
-	    } finally {
-		LOCK.unlock();
+                if (event != null) {
+                    event.run();
+                }
             }
-            if (event != null) {
-                event.run();
-            }
+        } finally {
+            inWaitForNextFrame = false;
         }
 	return true;
     }

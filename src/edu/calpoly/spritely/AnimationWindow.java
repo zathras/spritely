@@ -84,7 +84,9 @@ public abstract class AnimationWindow {
 
     /**
      * Sets a key typed handler.  If a key is typed, the key typed event
-     * will be be sent to the handler during a call to waitForNextFrame()
+     * will be be sent to the handler during a call to waitForNextFrame().
+     * It is forbidden to call waitForNextFrame() or showNextFrame() from
+     * within the body of a handler.
      *
      * @param  handler  The handler.  
      * @throws IllegalStateException if start() has been called, or if
@@ -102,8 +104,10 @@ public abstract class AnimationWindow {
 
     /**
      * Sets a mouse handler.  If the mouse is clicked, the mouse event will
-     * be sent to the handler during a call to waitForNextFrame().  Note
-     * that SpriteWindow scales the x an y coordinate so that they refer
+     * be sent to the handler during a call to waitForNextFrame(). 
+     * It is forbidden to call waitForNextFrame() or showNextFrame() from
+     * within the body of a handler.
+     * Note that SpriteWindow scales the x an y coordinate so that they refer
      * to the row and column of a tile square, not pixels.
      *
      * @param handler   The handler.
