@@ -56,12 +56,23 @@ import java.util.LinkedList;
  * </pre>
  * You are not required to have a single "event loop" like this, however.
  * You can call frame.waitForNextFrame() and frame.showFrame() whenever 
- * you want to.  It will
+ * you want to within your program, as long as you don't try to call it
+ * from a mouse or keyboard handler.  It will
  * only call your callbacks during a call to showNextFrame(), so you
  * don't need to handle multi-threading.
  * <p>
- * It's expected that you won't have multiple frames, but you can.
- * You can run each frame from its own thread, or you
+ * This style of animation creates a new frame, some number of times per
+ * second (controlled by the frames/second value you set).  This frees you
+ * from having to track if things have changed; you just fill up a frame
+ * object with the current state of the world every time the framework is
+ * ready for you.  Don't worry too much about wasting CPU time.  This kind
+ * of animation is usually done on a personal computer, where you have CPU
+ * power to burn.  Also, in a real program that features motion, something
+ * usually changes every frame anyway.  If you really want to optimize 
+ * painting, check out <code>paintLastFrameTo(java.awt.Graphics2D)</code>.
+ * <p>
+ * It's expected that you won't have multiple windows, but you can.
+ * You can run each window from its own thread, or you
  * can arrange to call showNextFrame on the multiple frame objects, one
  * after the other, from the same thread.
  * <p>
