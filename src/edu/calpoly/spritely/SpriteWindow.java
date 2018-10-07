@@ -251,6 +251,7 @@ public final class SpriteWindow extends AnimationWindow {
      */
     public void showNextFrame() {
         checkStarted(true);
+        checkNotWaiting();
 	if (currentAnimationFrame == null) {
 	    throw new IllegalStateException();
 	}

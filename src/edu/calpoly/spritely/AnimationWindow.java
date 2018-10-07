@@ -51,6 +51,10 @@ public abstract class AnimationWindow {
 	controller.checkStarted(expected);
     }
 
+    void checkNotWaiting() {
+        controller.checkNotWaiting();
+    }
+
     /**
      * Sets the number of frames/second that are displayed.
      *

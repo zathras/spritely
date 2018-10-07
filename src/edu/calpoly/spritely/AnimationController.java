@@ -262,15 +262,7 @@ import java.util.concurrent.locks.ReentrantLock;
     // hierarchy.
     //
     boolean waitForNextFrame(Display display, boolean mouseWanted) {
-        if (inWaitForNextFrame) {
-            System.out.println();
-            System.out.println("*** Spritely WARNING ***");
-            System.out.println("     Spritely detected a call to waitForNextFrame()");
-            System.out.println("    during a call to waitForNextFrame().  Perhaps you called it");
-            System.out.println("    from a mouse or keyboard handler?  This is forbidden., and will");
-            System.out.println("    soon be turned into a hard failure.");
-            System.out.println();
-        }
+        checkNotWaiting();
         inWaitForNextFrame = true;
 	currFrame++;
         boolean excused = false;
@@ -345,6 +337,15 @@ import java.util.concurrent.locks.ReentrantLock;
             inWaitForNextFrame = false;
         }
 	return true;
+    }
+
+    //
+    // Fail if we're in the middle of a call to waitForNextFrame().
+    //
+    void checkNotWaiting() {
+        if (inWaitForNextFrame) {
+            throw new IllegalStateException("It is forbidden to call this while waitForNextFrame() is executing");
+        }
     }
 
 

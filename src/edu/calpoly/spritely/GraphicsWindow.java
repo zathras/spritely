@@ -231,6 +231,7 @@ public final class GraphicsWindow extends AnimationWindow {
      */
     public void showNextFrame(boolean drawingWasDone) {
         checkStarted(true);
+        checkNotWaiting();
 	if (currGraphics == null) {
 	    throw new IllegalStateException();
 	}
