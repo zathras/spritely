@@ -254,6 +254,10 @@ public final class SpriteWindow extends AnimationWindow {
 	if (currentAnimationFrame == null) {
 	    throw new IllegalStateException();
 	}
+	if (GradingSupport.ENABLED) {
+	    GradingSupport.fromSpriteWindowShowNextFrame(
+	    		this, currentAnimationFrame);
+	}
         display.showFrame(currentAnimationFrame);
     }
 }

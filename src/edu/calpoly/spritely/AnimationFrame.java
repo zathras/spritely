@@ -189,4 +189,11 @@ public final class AnimationFrame {
             System.out.println("        ");
         }
     }
+
+    //
+    // Grading support
+    //
+    Object[][] gradingGetGrid() {
+	return grid;
+    }
 }
