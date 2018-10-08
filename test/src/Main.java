@@ -26,6 +26,15 @@ public class Main {
 
     private void mouseClicked(int x, int y) {
         System.out.println("Mouse clicked:  x=" + x + ", y=" + y + "    ");
+        if (x == 0 && y == 0) {
+            System.out.println("Calling showNextFrame().  This should cause "
+                                + "an assertion failure.");
+            window.showNextFrame();
+        } else if (x == 1 && y == 0) {
+            System.out.println("Calling waitForNextFrame().  This should cause "
+                                + "an assertion failure.");
+            window.waitForNextFrame();
+        }
     }
 
     private void keyTyped(char ch) {

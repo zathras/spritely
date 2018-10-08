@@ -101,6 +101,9 @@ abstract class AnimatedCanvas extends JComponent implements Display {
             }
         });
         Dimension d = getCanvasSize();
+        assert d.height > 0 && d.width > 0 
+              && d.height <= 4096 && d.width <= 4096
+                : ("Illegal window size:  " + d);
         setPreferredSize(d);
 	if (currentBuffer == null) {
 	    // Won't be null for a GraphicsWindow where the initial frame

@@ -22,55 +22,17 @@
 
 package edu.calpoly.spritely;
 
-import java.util.Objects;
-
 /**
- * Represents a width and height value.  May be used as a Map key.
- *
- *      @author         Bill Foote, http://jovial.com
+ * Private class to add support for automatic grading.  A grading program
+ * can swap out the source for this class in favor of one that adds 
+ * instrumention.  By doing this at the source level, we can use a private
+ * static boolean to remove all overhead when this is not in use.
  */
+class GradingSupport {
 
-public final class Size {
+    static boolean ENABLED = false;
 
-    /**
-     * The width
-     */
-    public final int width;
-
-    /**
-     * The height
-     */
-    public final int height;
-
-    /**
-     * Create a new, immutable Size object
-     *
-     * @param width     The width
-     * @param height    The height
-     */
-    public Size(int width, int height) {
-        this.width = width;
-        this.height = height;
-    }
-
-    @Override
-    public int hashCode() {
-        return (31 + width * 31 + height) * 31;
-        // What java.util.Arrays ends up doing, without all the autoboxing
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other instanceof Size) {
-            Size so = (Size) other;
-            return so.width == width && so.height == height;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public String toString() {
-	return getClass().getName() + "(" + width + ", " + height + ")";
+    static void fromSpriteWindowShowNextFrame(SpriteWindow w, AnimationFrame f)
+    {
     }
 }
