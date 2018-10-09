@@ -35,4 +35,8 @@ class GradingSupport {
     static void fromSpriteWindowShowNextFrame(SpriteWindow w, AnimationFrame f)
     {
     }
+
+    static boolean checkNotWaitingFailIsExcused() {
+        return false;
+    }
 }

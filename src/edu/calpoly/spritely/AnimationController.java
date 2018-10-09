@@ -344,7 +344,15 @@ import java.util.concurrent.locks.ReentrantLock;
     //
     void checkNotWaiting() {
         if (inWaitForNextFrame) {
-            throw new IllegalStateException("It is forbidden to call this while waitForNextFrame() is executing");
+            if (GradingSupport.ENABLED 
+                && GradingSupport.checkNotWaitingFailIsExcused()) 
+            {
+                System.out.println(
+                        "*** Ignoring a checkNotWaiting() failure ***");
+            } else {
+                throw new IllegalStateException("It is forbidden to call "
+                        + "this while waitForNextFrame() is executing");
+            }
         }
     }
 
