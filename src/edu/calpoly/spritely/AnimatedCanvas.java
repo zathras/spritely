@@ -96,8 +96,8 @@ abstract class AnimatedCanvas extends JComponent implements Display {
         });
         addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                handleMouseClicked(e);
+            public void mouseReleased(MouseEvent e) {
+                handleMouseReleased(e);
             }
         });
         Dimension d = getCanvasSize();
@@ -169,9 +169,13 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 	}
     }
 
-    private void handleMouseClicked(MouseEvent e) {
+    private void handleMouseReleased(MouseEvent e) {
 	double sx = Math.round(e.getX() / scale);
 	double sy = Math.round(e.getY() / scale);
+	// Since this is the only mouse gesture we use,
+	// mouse released is better than an actual AWT mouse clicked
+	// event, since it covers press-drag-release, whereas AWT's
+	// mousePressed doesn't.
 	getWindow().mouseClicked(sx, sy);
     }
 
