@@ -301,7 +301,9 @@ import java.util.concurrent.locks.ReentrantLock;
                             // Don't drop more than 4 frames
                             if (excused) {
                                 excused = false;
-                            } else if (!silent) {
+                            } else if (!silent 
+                                       && timeSinceStart > (2 * 1000L * MS_TO_NANOS))
+                            {
                                 System.out.println(
                                     "NOTE (Spritely):  Animation fell behind by " +
                                     (long) Math.ceil((-frameNS - waitTime)
