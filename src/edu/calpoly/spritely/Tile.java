@@ -43,6 +43,10 @@ public interface Tile {
      * Paints this tile into the given graphics context g.  g will be
      * set up so that tiles that are underneath this tile will show
      * through if this tile has transparent, or semi-transparent pixels.
+     * <p>
+     * Note that Spritely optimizes repainting.  It will only paint a frame
+     * if it needs to, because a different set of tiles is on a given square.
+     * See the documentation about immutability at the beginning of this class.
      *
      * @param g         The Java graphics context to draw into, with an
      *                  appropriate translation and crop already set.

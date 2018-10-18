@@ -31,6 +31,7 @@ import java.util.ArrayList;
 
 /**
  * Representation of one frame of animation in a SpriteWindow.  
+ * By default, Spritely offers to show 30 frames each second.
  * An AnimationFrame is
  * given to client code by a SpriteWindow for each frame of animation.
  * The client works by adding tiles to a grid maintained by the
