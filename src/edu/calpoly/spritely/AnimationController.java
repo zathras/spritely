@@ -62,6 +62,11 @@ import java.util.concurrent.locks.ReentrantLock;
      */
     public final static double DEFAULT_FPS = 30.0;
 
+    /**
+     * The maximum number of frames/second.
+     */
+    public final static double MAX_FPS = 60;
+
     private final static long MS_TO_NANOS = 1_000_000L;
 
     private final ReentrantLock LOCK = new ReentrantLock();
@@ -79,6 +84,8 @@ import java.util.concurrent.locks.ReentrantLock;
     private double nextFrameTime = Double.POSITIVE_INFINITY;
         // Time for the next frame relative to getTimeSinceStart() when
         // in 0 fps mode
+    private double minNextFrameTime = Double.NEGATIVE_INFINITY;
+        // Minimum value for nextFrameTime
 
     /**
      * Throw an IllegalStateException if started isn't in the expected state.
@@ -101,14 +108,18 @@ import java.util.concurrent.locks.ReentrantLock;
      * of 0.0 is permitted; in this case, Spritely will only show
      * a new frame when one is requested.
      *
-     * @param   fps     The desired number of frames per second
+     * @param   fps     The desired number of frames per second.  If over
+     *                  MAX_FPS, the framerate will be set to MAX_FPS.
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
+     * @see MAX_FPS
      */
     public void setFps(double fps) {
         if (fps < 0.0) {
             throw new IllegalArgumentException(
                             "Negative fps value not allowed:  " + fps);
+        } else if (fps > MAX_FPS) {
+            fps = MAX_FPS;
         }
         checkStarted(false);
         LOCK.lock();
@@ -143,6 +154,9 @@ import java.util.concurrent.locks.ReentrantLock;
         try {
             if (fps != 0.0) {
                 throw new IllegalArgumentException("fps value is not 0:  "+fps);
+            }
+            if (nextTime < minNextFrameTime) {
+                nextTime = minNextFrameTime;
             }
             if (nextTime < nextFrameTime) {
                 nextFrameTime = nextTime;
@@ -354,6 +368,7 @@ import java.util.concurrent.locks.ReentrantLock;
                                 LOCK_CONDITION.await();
                             } else if (nextFrameTime <= tss) {
                                 nextFrameTime = Double.POSITIVE_INFINITY;
+                                minNextFrameTime = tss + 1000.0 / MAX_FPS;
                                 break;
                             } else {
                                 long w = (long)
@@ -361,6 +376,7 @@ import java.util.concurrent.locks.ReentrantLock;
                                 if (w <= 0) {
                                     break;
                                 }
+                                System.out.println("@@ " + w/MS_TO_NANOS);
                                 LOCK_CONDITION.awaitNanos((long) w);
                             }
                         } catch (InterruptedException ex) {

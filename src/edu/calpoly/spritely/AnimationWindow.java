@@ -60,9 +60,11 @@ public abstract class AnimationWindow {
      * of 0.0 is permitted; in this case, Spritely will only show
      * a new frame when one is requested.
      *
-     * @param   fps     The desired number of frames per second
+     * @param   fps     The desired number of frames per second.  If over
+     *                  MAX_FPS, the framerate will be set to MAX_FPS.
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
+     * @see AnimatinoController.MAX_FPS
      * @see #showNextFrameBy(double)
      */
     public void setFps(double fps) {

@@ -80,6 +80,7 @@ public class TestEventDriven implements Runnable {
             if (window.getTimeSinceStart() >= end) {
                 break;
             }
+        window.showNextFrameBy(0f);
         }
         System.out.println("Stopping...    ");
         window.stop();
