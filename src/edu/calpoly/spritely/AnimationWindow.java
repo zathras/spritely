@@ -56,15 +56,40 @@ public abstract class AnimationWindow {
     }
 
     /**
-     * Sets the number of frames/second that are displayed.
+     * Sets the number of frames/second that are displayed.  A value
+     * of 0.0 is permitted; in this case, Spritely will only show
+     * a new frame when one is requested.
      *
      * @param   fps     The desired number of frames per second
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
+     * @see #showNextFrameBy(double)
      */
     public void setFps(double fps) {
 	controller.setFps(fps);
     }
+
+    /**
+     * Show the next frame by the given time.  Spritely will make a
+     * best-faith effort to show the next frame by this time value, which
+     * is on the time scale reported by getTimeSinceStart().  If this value
+     * is before the current time, Spritely will show the next frame as soon
+     * as possible.  When waitForNextFrame() returns, the "next time value" 
+     * is cleared; calling showNextFrameBy() will take effect if called at 
+     * any time after waitForNextFrame() returns.
+     * <p>
+     * This method may be called on any thread.
+     * <p>
+     * This method may only be used if the frames/second value is 0.
+     *
+     * @see #getTimeSinceStart()
+     * @see #setFps(double)
+     * @throws IllegalStateException if the frames/second value is not 0.
+     */
+    public void showNextFrameBy(double nextTime) {
+        controller.showNextFrameBy(nextTime);
+    }
+
 
     double getFps() {
 	return controller.getFps();

@@ -70,11 +70,15 @@ import java.util.concurrent.locks.ReentrantLock;
     private boolean running = false;
     private boolean opened = false;
     private double fps = DEFAULT_FPS;
-    private long startTime;
-    private long currFrame;     // int would only buy < 2 years of animation :-)
+    private long startTime = Long.MIN_VALUE;
+    private long currFrame = -1L; 
+        // int would only buy < 2 years of animation :-)
     private LinkedList<Runnable> eventQueue = new LinkedList<>();
     private boolean silent = false;
     private boolean inWaitForNextFrame = false;
+    private double nextFrameTime = Double.POSITIVE_INFINITY;
+        // Time for the next frame relative to getTimeSinceStart() when
+        // in 0 fps mode
 
     /**
      * Throw an IllegalStateException if started isn't in the expected state.
@@ -93,17 +97,65 @@ import java.util.concurrent.locks.ReentrantLock;
     }
 
     /**
-     * Sets the number of frames/second that are displayed.
+     * Sets the number of frames/second that are displayed.  A value
+     * of 0.0 is permitted; in this case, Spritely will only show
+     * a new frame when one is requested.
      *
      * @param   fps     The desired number of frames per second
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
      */
     public void setFps(double fps) {
+        if (fps < 0.0) {
+            throw new IllegalArgumentException(
+                            "Negative fps value not allowed:  " + fps);
+        }
         checkStarted(false);
-        this.fps = fps;
+        LOCK.lock();
+        try {
+            this.fps = fps;
+        } finally {
+            LOCK.unlock();
+        }
     }
 
+    /**
+     * Show the next frame by the given time.  Spritely will make a
+     * best-faith effort to show the next frame by this time value, which
+     * is on the time scale reported by getTimeSinceStart().  If this value
+     * is before the current time, Spritely will show the next frame as soon
+     * as possible.  When waitForNextFrame() returns, the "next time value" 
+     * is cleared; calling showNextFrameBy() will take effect if called at 
+     * any time after waitForNextFrame() returns.
+     * <p>
+     * This method may be called on any thread.  It may be called multiple
+     * times per frame; in this case, the minimum value is considered.
+     * <p>
+     * This method may only be used if the frames/second value is 0.
+     *
+     * @see #getTimeSinceStart()
+     * @see #setFps(double)
+     *
+     * @throws IllegalStateException if the frames/second value is not 0.
+     */
+    public void showNextFrameBy(double nextTime) {
+        LOCK.lock();
+        try {
+            if (fps != 0.0) {
+                throw new IllegalArgumentException("fps value is not 0:  "+fps);
+            }
+            if (nextTime < nextFrameTime) {
+                nextFrameTime = nextTime;
+                LOCK_CONDITION.signalAll();
+            }
+        } finally {
+            LOCK.unlock();
+        }
+    }
+
+    /**
+     * Get the frames/second value.  Result will be >= 0.0.
+     */
     double getFps() {
 	return fps;
     }
@@ -208,7 +260,13 @@ import java.util.concurrent.locks.ReentrantLock;
      * @see System#nanoTime()
      */
     public double getTimeSinceStart() {
-	return currFrame * (1000 / fps);
+        checkStarted(true);
+        if (fps > 0.0) {
+            return currFrame * (1000 / fps);
+        } else {
+            return ((double) (System.nanoTime() - startTime)) 
+                / ((double) MS_TO_NANOS);
+        }
     }
 
 
@@ -289,7 +347,28 @@ import java.util.concurrent.locks.ReentrantLock;
                             return false;
                         }
                         startTime = System.nanoTime();
-                    } else {
+                    } else if (fps == 0.0) {
+                        try {
+                            double tss = getTimeSinceStart();
+                            if (nextFrameTime == Double.POSITIVE_INFINITY) {
+                                LOCK_CONDITION.await();
+                            } else if (nextFrameTime <= tss) {
+                                nextFrameTime = Double.POSITIVE_INFINITY;
+                                break;
+                            } else {
+                                long w = (long)
+                                    ((nextFrameTime - tss) * MS_TO_NANOS + 0.5);
+                                if (w <= 0) {
+                                    break;
+                                }
+                                LOCK_CONDITION.awaitNanos((long) w);
+                            }
+                        } catch (InterruptedException ex) {
+                            stop();
+                            Thread.currentThread().interrupt();
+                            return false;
+                        }
+                    } else {    // constant-rate animation.  This gets hairy!
                         double frameNS = MS_TO_NANOS * 1000 / fps;
                         double timeSinceStart = getTimeSinceStart() * MS_TO_NANOS;
                         long nextTime = startTime + (long) timeSinceStart;

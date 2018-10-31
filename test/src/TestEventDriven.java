@@ -57,33 +57,43 @@ public class TestEventDriven implements Runnable {
         events.add(new Event(window.getTimeSinceStart() + 1000.0, () -> {
             circle.color = Color.green;
         }));
+        window.showNextFrameBy(0f);
     }
 
     @Override
     public void run() {
-        window.setFps(30);
+        double end = 50_000;    // End after 50 seconds
+        window.setFps(0f);
         window.setMouseClickedHandler((x, y) -> mouseClicked(x, y));
 	paintCircles(window.getInitialFrame());
         window.start();
-        for (int i = 0; i < 1500; i++) {
+        while (true) {
+            window.showNextFrameBy(end);
             Graphics2D g = window.waitForNextFrame();
+            System.out.println("Showing frame:  " + window.getTimeSinceStart());
             processEvents();
             if (g == null) {
                 return;
             }
 	    paintCircles(g);
             window.showNextFrame();
+            if (window.getTimeSinceStart() >= end) {
+                break;
+            }
         }
         System.out.println("Stopping...    ");
         window.stop();
-        System.out.println("Goodbye    ");
+        System.out.println("Goodbye.    ");
     }
 
     private void processEvents() {
         double now = window.getTimeSinceStart();
         while(true) {
             Event e = events.peek();
-            if (e == null || e.due > now) {
+            if (e == null) {
+                return;
+            } else if (e.due > now) {
+                window.showNextFrameBy(e.due);
                 return;
             }
             e = events.poll();
