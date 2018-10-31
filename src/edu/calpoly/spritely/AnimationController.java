@@ -119,6 +119,8 @@ import java.util.concurrent.locks.ReentrantLock;
             throw new IllegalArgumentException(
                             "Negative fps value not allowed:  " + fps);
         } else if (fps > MAX_FPS) {
+            System.out.println("NOTE (Spritely):  " + fps 
+                + " frames/second requested.  " + MAX_FPS + " set instead.");
             fps = MAX_FPS;
         }
         checkStarted(false);
@@ -376,7 +378,6 @@ import java.util.concurrent.locks.ReentrantLock;
                                 if (w <= 0) {
                                     break;
                                 }
-                                System.out.println("@@ " + w/MS_TO_NANOS);
                                 LOCK_CONDITION.awaitNanos((long) w);
                             }
                         } catch (InterruptedException ex) {
