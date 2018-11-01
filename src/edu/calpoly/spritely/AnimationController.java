@@ -65,7 +65,7 @@ import java.util.concurrent.locks.ReentrantLock;
     /**
      * The maximum number of frames/second.
      */
-    public final static double MAX_FPS = 60;
+    public final static double DEFAULT_MAX_FPS = 60;
 
     private final static long MS_TO_NANOS = 1_000_000L;
 
@@ -75,6 +75,7 @@ import java.util.concurrent.locks.ReentrantLock;
     private boolean running = false;
     private boolean opened = false;
     private double fps = DEFAULT_FPS;
+    private double maxFps = DEFAULT_MAX_FPS;
     private long startTime = Long.MIN_VALUE;
     private long currFrame = -1L; 
         // int would only buy < 2 years of animation :-)
@@ -109,27 +110,53 @@ import java.util.concurrent.locks.ReentrantLock;
      * a new frame when one is requested.
      *
      * @param   fps     The desired number of frames per second.  If over
-     *                  MAX_FPS, the framerate will be set to MAX_FPS.
+     *                  the maximum value, the framerate will be set to the
+     *                  maximum.
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
-     * @see MAX_FPS
+     * @see DEFAULT_MAX_FPS
+     * @see #setMaxFps(double)
      */
     public void setFps(double fps) {
         if (fps < 0.0) {
             throw new IllegalArgumentException(
                             "Negative fps value not allowed:  " + fps);
-        } else if (fps > MAX_FPS) {
+        } else if (fps > maxFps) {
             System.out.println("NOTE (Spritely):  " + fps 
-                + " frames/second requested.  " + MAX_FPS + " set instead.");
-            fps = MAX_FPS;
+                + " frames/second requested.  " + maxFps + " set instead.");
+            fps = maxFps;
         }
         checkStarted(false);
-        LOCK.lock();
+        LOCK.lock();    // Probably unnecessary, but harmless.
         try {
             this.fps = fps;
         } finally {
             LOCK.unlock();
         }
+    }
+
+    /**
+     * Sets the maximum number of frames/second.  If Spritely is in
+     * event-driven mode (0 frames/second), this sets the maximum fps
+     * rate spritely will ever attempt to achieve, regardless of 
+     * the next frame time.  If Spritely is in constant-rate mode
+     * (frames/second above 0), this sets a ceiling on the frames/second
+     * value.
+     *
+     * @param  maxFps   The desired maximum frames/second value
+     *
+     * @see #setFps(double)
+     * @see DEFAULT_MAX_FPS
+     * @see #showNextFrameBy(double)
+     */
+    public void setMaxFps(double maxFps) {
+        if (maxFps < 0.0) {
+            throw new IllegalArgumentException(
+                            "Negative fps value not allowed:  " + maxFps);
+        }
+        checkStarted(false);
+        this.maxFps = maxFps;
+        setFps(fps);
     }
 
     /**
@@ -146,8 +173,11 @@ import java.util.concurrent.locks.ReentrantLock;
      * <p>
      * This method may only be used if the frames/second value is 0.
      *
+     * @param nextTime The time the next frame is desired by.
+     *
      * @see #getTimeSinceStart()
      * @see #setFps(double)
+     * @see #setMaxFps(double)
      *
      * @throws IllegalStateException if the frames/second value is not 0.
      */
@@ -370,7 +400,7 @@ import java.util.concurrent.locks.ReentrantLock;
                                 LOCK_CONDITION.await();
                             } else if (nextFrameTime <= tss) {
                                 nextFrameTime = Double.POSITIVE_INFINITY;
-                                minNextFrameTime = tss + 1000.0 / MAX_FPS;
+                                minNextFrameTime = tss + 1000.0 / maxFps;
                                 break;
                             } else {
                                 long w = (long)

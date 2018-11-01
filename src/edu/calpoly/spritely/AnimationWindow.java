@@ -61,14 +61,34 @@ public abstract class AnimationWindow {
      * a new frame when one is requested.
      *
      * @param   fps     The desired number of frames per second.  If over
-     *                  MAX_FPS, the framerate will be set to MAX_FPS.
+     *                  the maximum value, the framerate will be set to the
+     *                  maximum.
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
-     * @see AnimatinoController.MAX_FPS
+     * @see edu.calpoly.spritely.AnimationController#DEFAULT_MAX_FPS
+     * @see #setMaxFps(double)
      * @see #showNextFrameBy(double)
      */
     public void setFps(double fps) {
 	controller.setFps(fps);
+    }
+
+    /**
+     * Sets the maximum number of frames/second.  If Spritely is in
+     * event-driven mode (0 frames/second), this sets the maximum fps
+     * rate spritely will ever attempt to achieve, regardless of 
+     * the next frame time.  If Spritely is in constant-rate mode
+     * (frames/second above 0), this sets a ceiling on the frames/second
+     * value.
+     *
+     * @param  maxFps   The desired maximum frames/second value
+     *
+     * @see #setFps(double)
+     * @see AnimationController#DEFAULT_MAX_FPS
+     * @see #showNextFrameBy(double)
+     */
+    public void setMaxFps(double maxFps) {
+        controller.setMaxFps(maxFps);
     }
 
     /**
@@ -84,8 +104,11 @@ public abstract class AnimationWindow {
      * <p>
      * This method may only be used if the frames/second value is 0.
      *
+     * @param nextTime The time the next frame is desired by.
+     *
      * @see #getTimeSinceStart()
      * @see #setFps(double)
+     * @see #setMaxFps(double)
      * @throws IllegalStateException if the frames/second value is not 0.
      */
     public void showNextFrameBy(double nextTime) {
