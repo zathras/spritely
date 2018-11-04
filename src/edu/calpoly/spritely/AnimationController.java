@@ -173,7 +173,7 @@ import java.util.concurrent.locks.ReentrantLock;
      * <p>
      * This method may only be used if the frames/second value is 0.
      *
-     * @param nextTime The time the next frame is desired by.
+     * @param nextTime The time the next frame is desired by, in milliseconds.
      *
      * @see #getTimeSinceStart()
      * @see #setFps(double)
@@ -405,8 +405,8 @@ import java.util.concurrent.locks.ReentrantLock;
                             } else {
                                 long w = (long)
                                     ((nextFrameTime - tss) * MS_TO_NANOS + 0.5);
-                                if (w <= 0) {
-                                    break;
+                                if (w <= 0) {   // Unlikely, but to be sure
+                                    w = 1;
                                 }
                                 LOCK_CONDITION.awaitNanos((long) w);
                             }
