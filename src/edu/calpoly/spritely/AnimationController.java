@@ -62,6 +62,11 @@ import java.util.concurrent.locks.ReentrantLock;
      */
     public final static double DEFAULT_FPS = 30.0;
 
+    /**
+     * The maximum number of frames/second.
+     */
+    public final static double DEFAULT_MAX_FPS = 60;
+
     private final static long MS_TO_NANOS = 1_000_000L;
 
     private final ReentrantLock LOCK = new ReentrantLock();
@@ -70,11 +75,18 @@ import java.util.concurrent.locks.ReentrantLock;
     private boolean running = false;
     private boolean opened = false;
     private double fps = DEFAULT_FPS;
-    private long startTime;
-    private long currFrame;     // int would only buy < 2 years of animation :-)
+    private double maxFps = DEFAULT_MAX_FPS;
+    private long startTime = Long.MIN_VALUE;
+    private long currFrame = -1L; 
+        // int would only buy < 2 years of animation :-)
     private LinkedList<Runnable> eventQueue = new LinkedList<>();
     private boolean silent = false;
     private boolean inWaitForNextFrame = false;
+    private double nextFrameTime = Double.POSITIVE_INFINITY;
+        // Time for the next frame relative to getTimeSinceStart() when
+        // in 0 fps mode
+    private double minNextFrameTime = Double.NEGATIVE_INFINITY;
+        // Minimum value for nextFrameTime
 
     /**
      * Throw an IllegalStateException if started isn't in the expected state.
@@ -93,17 +105,103 @@ import java.util.concurrent.locks.ReentrantLock;
     }
 
     /**
-     * Sets the number of frames/second that are displayed.
+     * Sets the number of frames/second that are displayed.  A value
+     * of 0.0 is permitted; in this case, Spritely will only show
+     * a new frame when one is requested.
      *
-     * @param   fps     The desired number of frames per second
+     * @param   fps     The desired number of frames per second.  If over
+     *                  the maximum value, the framerate will be set to the
+     *                  maximum.
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
+     * @see DEFAULT_MAX_FPS
+     * @see #setMaxFps(double)
      */
     public void setFps(double fps) {
+        if (fps < 0.0) {
+            throw new IllegalArgumentException(
+                            "Negative fps value not allowed:  " + fps);
+        } else if (fps > maxFps) {
+            System.out.println("NOTE (Spritely):  " + fps 
+                + " frames/second requested.  " + maxFps + " set instead.");
+            fps = maxFps;
+        }
         checkStarted(false);
-        this.fps = fps;
+        LOCK.lock();    // Probably unnecessary, but harmless.
+        try {
+            this.fps = fps;
+        } finally {
+            LOCK.unlock();
+        }
     }
 
+    /**
+     * Sets the maximum number of frames/second.  If Spritely is in
+     * event-driven mode (0 frames/second), this sets the maximum fps
+     * rate spritely will ever attempt to achieve, regardless of 
+     * the next frame time.  If Spritely is in constant-rate mode
+     * (frames/second above 0), this sets a ceiling on the frames/second
+     * value.
+     *
+     * @param  maxFps   The desired maximum frames/second value
+     *
+     * @see #setFps(double)
+     * @see DEFAULT_MAX_FPS
+     * @see #showNextFrameBy(double)
+     */
+    public void setMaxFps(double maxFps) {
+        if (maxFps < 0.0) {
+            throw new IllegalArgumentException(
+                            "Negative fps value not allowed:  " + maxFps);
+        }
+        checkStarted(false);
+        this.maxFps = maxFps;
+        setFps(fps);
+    }
+
+    /**
+     * Show the next frame by the given time.  Spritely will make a
+     * best-faith effort to show the next frame by this time value, which
+     * is on the time scale reported by getTimeSinceStart().  If this value
+     * is before the current time, Spritely will show the next frame as soon
+     * as possible.  When waitForNextFrame() returns, the "next time value" 
+     * is cleared; calling showNextFrameBy() will take effect if called at 
+     * any time after waitForNextFrame() returns.
+     * <p>
+     * This method may be called on any thread.  It may be called multiple
+     * times per frame; in this case, the minimum value is considered.
+     * <p>
+     * This method may only be used if the frames/second value is 0.
+     *
+     * @param nextTime The time the next frame is desired by, in milliseconds.
+     *
+     * @see #getTimeSinceStart()
+     * @see #setFps(double)
+     * @see #setMaxFps(double)
+     *
+     * @throws IllegalStateException if the frames/second value is not 0.
+     */
+    public void showNextFrameBy(double nextTime) {
+        LOCK.lock();
+        try {
+            if (fps != 0.0) {
+                throw new IllegalArgumentException("fps value is not 0:  "+fps);
+            }
+            if (nextTime < minNextFrameTime) {
+                nextTime = minNextFrameTime;
+            }
+            if (nextTime < nextFrameTime) {
+                nextFrameTime = nextTime;
+                LOCK_CONDITION.signalAll();
+            }
+        } finally {
+            LOCK.unlock();
+        }
+    }
+
+    /**
+     * Get the frames/second value.  Result will be >= 0.0.
+     */
     double getFps() {
 	return fps;
     }
@@ -208,7 +306,13 @@ import java.util.concurrent.locks.ReentrantLock;
      * @see System#nanoTime()
      */
     public double getTimeSinceStart() {
-	return currFrame * (1000 / fps);
+        checkStarted(true);
+        if (fps > 0.0) {
+            return currFrame * (1000 / fps);
+        } else {
+            return ((double) (System.nanoTime() - startTime)) 
+                / ((double) MS_TO_NANOS);
+        }
     }
 
 
@@ -289,7 +393,29 @@ import java.util.concurrent.locks.ReentrantLock;
                             return false;
                         }
                         startTime = System.nanoTime();
-                    } else {
+                    } else if (fps == 0.0) {
+                        try {
+                            double tss = getTimeSinceStart();
+                            if (nextFrameTime == Double.POSITIVE_INFINITY) {
+                                LOCK_CONDITION.await();
+                            } else if (nextFrameTime <= tss) {
+                                nextFrameTime = Double.POSITIVE_INFINITY;
+                                minNextFrameTime = tss + 1000.0 / maxFps;
+                                break;
+                            } else {
+                                long w = (long)
+                                    ((nextFrameTime - tss) * MS_TO_NANOS + 0.5);
+                                if (w <= 0) {   // Unlikely, but to be sure
+                                    w = 1;
+                                }
+                                LOCK_CONDITION.awaitNanos((long) w);
+                            }
+                        } catch (InterruptedException ex) {
+                            stop();
+                            Thread.currentThread().interrupt();
+                            return false;
+                        }
+                    } else {    // constant-rate animation.  This gets hairy!
                         double frameNS = MS_TO_NANOS * 1000 / fps;
                         double timeSinceStart = getTimeSinceStart() * MS_TO_NANOS;
                         long nextTime = startTime + (long) timeSinceStart;
@@ -301,7 +427,9 @@ import java.util.concurrent.locks.ReentrantLock;
                             // Don't drop more than 4 frames
                             if (excused) {
                                 excused = false;
-                            } else if (!silent) {
+                            } else if (!silent 
+                                       && timeSinceStart > (2 * 1000L * MS_TO_NANOS))
+                            {
                                 System.out.println(
                                     "NOTE (Spritely):  Animation fell behind by " +
                                     (long) Math.ceil((-frameNS - waitTime)
@@ -344,7 +472,15 @@ import java.util.concurrent.locks.ReentrantLock;
     //
     void checkNotWaiting() {
         if (inWaitForNextFrame) {
-            throw new IllegalStateException("It is forbidden to call this while waitForNextFrame() is executing");
+            if (GradingSupport.ENABLED 
+                && GradingSupport.checkNotWaitingFailIsExcused()) 
+            {
+                System.out.println(
+                        "*** Ignoring a checkNotWaiting() failure ***");
+            } else {
+                throw new IllegalStateException("It is forbidden to call "
+                        + "this while waitForNextFrame() is executing");
+            }
         }
     }
 

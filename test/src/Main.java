@@ -109,6 +109,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 	(new Thread(new TestGraphics())).start();
+	(new Thread(new TestEventDriven())).start();
         (new Main()).run();
     }
 }

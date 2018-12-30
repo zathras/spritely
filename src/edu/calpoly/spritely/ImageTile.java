@@ -48,6 +48,7 @@ public class ImageTile implements Tile {
 
     private final BufferedImage image;
     private final char text;
+    private final String imageSource;   // For debugging
 
     /**
      * Create a ImageTile with the given image, at the given size,
@@ -65,22 +66,28 @@ public class ImageTile implements Tile {
             throws IOException 
     {
         BufferedImage im;
+        if (!imageFile.exists()) {
+            throw new IOException("File not found:  " + imageFile);
+        }
+        try { 
+            im = ImageIO.read(imageFile);
+        } catch (IOException ex) {
+            System.err.println("***  Error reading " + imageFile);
+            throw ex;
+        }
 	if (GraphicsEnvironment.getLocalGraphicsEnvironment().isHeadless()) {
 	    im = null;
-	} else {
-	    if (!imageFile.exists()) {
-		throw new IOException("File not found:  " + imageFile);
-	    }
-	    try { 
-		im = ImageIO.read(imageFile);
-	    } catch (IOException ex) {
-		System.err.println("***  Error reading " + imageFile);
-		throw ex;
-	    }
+            // Yes, this is weird:  We're loading the image and throwing it
+            // away.  We do this because, for an intro programming class,
+            // we want this to fail if the image isn't present.  A bit of
+            // extra execution time is easily worth it, to make debugging
+            // a little easier!
+        } else {
 	    im = scaleImage(im, size);
 	}
         this.image = im;
         this.text = text;
+        this.imageSource = imageFile.toString();
     }
 
     /**
@@ -112,6 +119,7 @@ public class ImageTile implements Tile {
 	}
         this.image = im;
         this.text = text;
+        this.imageSource = imageURL.toString();
     }
 
     private static BufferedImage scaleImage(BufferedImage im, Size size) {
@@ -139,5 +147,10 @@ public class ImageTile implements Tile {
     @Override
     public char getText() {
         return text;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ":(" + imageSource + ")"; 
     }
 }

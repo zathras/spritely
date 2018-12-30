@@ -56,15 +56,65 @@ public abstract class AnimationWindow {
     }
 
     /**
-     * Sets the number of frames/second that are displayed.
+     * Sets the number of frames/second that are displayed.  A value
+     * of 0.0 is permitted; in this case, Spritely will only show
+     * a new frame when one is requested.
      *
-     * @param   fps     The desired number of frames per second
+     * @param   fps     The desired number of frames per second.  If over
+     *                  the maximum value, the framerate will be set to the
+     *                  maximum.
      * @throws IllegalStateException if start() has been called.
      * @see DEFAULT_FPS
+     * @see edu.calpoly.spritely.AnimationController#DEFAULT_MAX_FPS
+     * @see #setMaxFps(double)
+     * @see #showNextFrameBy(double)
      */
     public void setFps(double fps) {
 	controller.setFps(fps);
     }
+
+    /**
+     * Sets the maximum number of frames/second.  If Spritely is in
+     * event-driven mode (0 frames/second), this sets the maximum fps
+     * rate spritely will ever attempt to achieve, regardless of 
+     * the next frame time.  If Spritely is in constant-rate mode
+     * (frames/second above 0), this sets a ceiling on the frames/second
+     * value.
+     *
+     * @param  maxFps   The desired maximum frames/second value
+     *
+     * @see #setFps(double)
+     * @see AnimationController#DEFAULT_MAX_FPS
+     * @see #showNextFrameBy(double)
+     */
+    public void setMaxFps(double maxFps) {
+        controller.setMaxFps(maxFps);
+    }
+
+    /**
+     * Show the next frame by the given time.  Spritely will make a
+     * best-faith effort to show the next frame by this time value, which
+     * is on the time scale reported by getTimeSinceStart().  If this value
+     * is before the current time, Spritely will show the next frame as soon
+     * as possible.  When waitForNextFrame() returns, the "next time value" 
+     * is cleared; calling showNextFrameBy() will take effect if called at 
+     * any time after waitForNextFrame() returns.
+     * <p>
+     * This method may be called on any thread.
+     * <p>
+     * This method may only be used if the frames/second value is 0.
+     *
+     * @param nextTime The time the next frame is desired by.
+     *
+     * @see #getTimeSinceStart()
+     * @see #setFps(double)
+     * @see #setMaxFps(double)
+     * @throws IllegalStateException if the frames/second value is not 0.
+     */
+    public void showNextFrameBy(double nextTime) {
+        controller.showNextFrameBy(nextTime);
+    }
+
 
     double getFps() {
 	return controller.getFps();

@@ -136,7 +136,7 @@ final class SpriteScreen implements SpriteDisplay {
                            "(\"m\" entered)    ");
         System.out.println(
             "    Move the cursor with h,j,k,l (right/down/up/left)    ");
-        System.out.println("    Press enter when done, q to quit.    ");
+        System.out.println("    Press enter for mouse click, q to quit.    ");
         System.out.println("    Press m to send an m to the program.    ");
         int x = 0;
         int y = 0;
