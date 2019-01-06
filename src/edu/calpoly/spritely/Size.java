@@ -53,12 +53,22 @@ public final class Size {
         this.height = height;
     }
 
-    @Override
+    /**
+     * Give a hash code value based on the width and height.
+     *
+     * @return the hash code
+     */
     public int hashCode() {
         return (31 + width * 31 + height) * 31;
         // What java.util.Arrays ends up doing, without all the autoboxing
     }
 
+    /**
+     * Determine if two size values are equivalent.
+     *
+     * @param other     The object to compare against.
+     * @return true if other is a Size object with the same height and width.
+     */
     @Override
     public boolean equals(Object other) {
         if (other instanceof Size) {
