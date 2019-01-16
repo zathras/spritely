@@ -33,7 +33,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GraphicsEnvironment;
 import java.awt.Graphics2D;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
@@ -43,7 +42,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
-import java.awt.image.BufferStrategy;
 import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.SwingUtilities;
 import javax.swing.JScrollPane;
@@ -57,7 +55,6 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 
     private final JFrame frame;
     private final ReentrantLock LOCK = new ReentrantLock();
-    private BufferStrategy bufferStrategy;
     private double scale = 1.0;
     private long keyDownEventWhen = Long.MIN_VALUE;
     protected BufferedImage currentBuffer = null;
@@ -126,12 +123,6 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 	    }
         });
 	frame.pack();
-	frame.createBufferStrategy(2);
-	// Double-buffering is necessary here, even though we just draw
-	// a BufferedImage into the frame.  With an argument of 1 supplied
-	// here, flashing artifacts are visible on at least Linux.
-
-	bufferStrategy = frame.getBufferStrategy();
 	frame.setVisible(true);
 
 	if (!window.getSilent()) {
@@ -223,7 +214,6 @@ abstract class AnimatedCanvas extends JComponent implements Display {
     }
 
     protected void showNextBuffer() {
-	final AnimationWindow window = getWindow();
 	LOCK.lock();
 	try {
 	    BufferedImage tmp = nextBuffer;
@@ -232,33 +222,7 @@ abstract class AnimatedCanvas extends JComponent implements Display {
 	} finally {
 	    LOCK.unlock();
 	}
-        try {
-            do {
-                do {
-		    if (!window.isRunning()) {
-			return;
-		    }
-		    Graphics bsg = bufferStrategy.getDrawGraphics();
-		    frame.paint(bsg);
-		    bsg.dispose();
-                } while (bufferStrategy.contentsRestored());
-                bufferStrategy.show();
-            } while (bufferStrategy.contentsLost());
-        } catch (IllegalStateException ex) {
-            // If the window is closed while this is in process, we 
-            // might get an IllegalStateException here.  With a different
-	    // code structure one was seen that looked like a manifestation
-            // of JDK bug 6933331:
-            //    https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331
-            // It's relatively harmless, and has been around since 2010.
-
-            System.err.println("Spritely ignoring exception - window closing?");
-            System.err.println("  Probably https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6933331");
-            ex.printStackTrace();
-        }
-	Toolkit.getDefaultToolkit().sync();
-	// sync() probably does nothing these days, and shouldn't be
-	// necessary when using bufferStrategy, but it can't hurt.
+        repaint();
     }
 
     @Override
