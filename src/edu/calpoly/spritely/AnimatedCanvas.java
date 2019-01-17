@@ -63,6 +63,7 @@ abstract class AnimatedCanvas extends JComponent implements Display {
     AnimatedCanvas(String frameName) {
 	setDoubleBuffered(false);
         frame = new JFrame(frameName);
+        frame.setLocationByPlatform(true);
 	frame.setLayout(new BorderLayout());
     }
 
