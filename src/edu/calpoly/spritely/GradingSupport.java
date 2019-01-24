@@ -39,4 +39,7 @@ class GradingSupport {
     static boolean checkNotWaitingFailIsExcused() {
         return false;
     }
+
+    static void imageTileLoaded(ImageTile t) {
+    }
 }
