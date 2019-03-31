@@ -88,6 +88,7 @@ public class ImageTile implements Tile {
         this.image = im;
         this.text = text;
         this.imageSource = imageFile.toString();
+        GradingSupport.imageTileLoaded(this);
     }
 
     /**
